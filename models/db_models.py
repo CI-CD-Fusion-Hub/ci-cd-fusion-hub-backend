@@ -74,6 +74,7 @@ class Pipelines(Base):
     id = Column(Integer, primary_key=True, autoincrement=True)
     name = Column(String)
     application_id = Column(Integer, ForeignKey('applications.id'))
+    project_id = Column(String)
     created_ts = Column(TIMESTAMP, default=func.now())
 
     application = relationship("Applications", back_populates="pipelines", lazy="joined")
@@ -85,10 +86,8 @@ class Pipelines(Base):
         return {
             'id': self.id,
             'name': self.name,
-            'application': {
-                'id': self.application_id,
-                'name': self.application.name if self.application else None
-            },
+            'application': self.application.as_dict() if self.application else None,
+            'project_id': self.project_id,
             'created_ts': self.created_ts.isoformat() if self.created_ts else None
         }
 

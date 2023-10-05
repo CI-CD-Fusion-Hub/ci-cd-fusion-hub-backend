@@ -1,7 +1,7 @@
 import hashlib
 
 from exceptions.user_exception import UserNotFoundException
-from schemas.users_sch import CreateUser, UserOut, UpdateUser
+from schemas.users_sch import CreateUser, UserOut, UpdateUser, UserBaseOut
 from daos.users_dao import UserDAO
 from utils.response import ok, error
 
@@ -12,13 +12,25 @@ class UserService:
 
     async def get_all_users(self):
         users = await self.user_dao.get_all()
-        return ok(message="Successfully provided all users.", data=[UserOut.model_validate(user.as_dict()) for user in users])
+        return ok(message="Successfully provided all users.", data=[UserBaseOut.model_validate(user.as_dict()) for user in users])
 
     async def get_user_by_id(self, user_id: int):
-        user = await self.user_dao.get_by_id(user_id)
+        user = await self.user_dao.get_detailed_user_info(user_id)
         if not user:
             raise UserNotFoundException(f"User with ID {user_id} does not exist.")
-        return ok(message="Successfully provided user.", data=UserOut.model_validate(user.as_dict()))
+
+        user_data = UserOut.model_validate(user.as_dict())
+
+        user_data.roles = [role_member.role.as_dict() for role_member in user.roles]
+
+        pipelines = []
+        for role_member in user.roles:
+            for pipeline in role_member.role.pipelines:
+                pipelines.append(pipeline.pipeline)
+
+        user_data.pipelines = list(pipelines)
+
+        return ok(message="Successfully provided user details.", data=user_data)
 
     async def create_user(self, user_data: CreateUser):
         try:
@@ -48,3 +60,9 @@ class UserService:
             raise UserNotFoundException(f"User with ID {user_id} does not exist.")
         await self.user_dao.delete(user_id)
         return ok(message="User has been successfully deleted.")
+
+    async def fetch_user_unassigned_roles(self, user_id: int):
+        unassigned_roles = await self.user_dao.get_user_unassigned_roles(user_id)
+        return ok(message="Successfully provided unassigned users for access role.",
+                  data=[role.as_dict() for role in unassigned_roles])
+

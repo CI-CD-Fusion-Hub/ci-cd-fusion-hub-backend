@@ -33,3 +33,8 @@ async def update_user(user_id: int, updated_data: UpdateUser, user_service: User
 @router.delete("/users/{user_id}", tags=["users"])
 async def delete_user(user_id: int, user_service: UserService = Depends(create_user_service)):
     return await user_service.delete_user(user_id)
+
+
+@router.get("/users/{user_id}/unassigned_roles", tags=["users"])
+async def get_user_unassigned_roles(user_id: int, user_service: UserService = Depends(create_user_service)):
+    return await user_service.fetch_user_unassigned_roles(user_id)

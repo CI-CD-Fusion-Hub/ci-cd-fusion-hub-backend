@@ -1,8 +1,10 @@
 import datetime
 import re
-from typing import Optional
+from typing import Optional, List
 
 from pydantic import BaseModel, validator
+
+from schemas.pipelines_sch import PipelineOut
 
 
 class CreateUser(BaseModel):
@@ -91,7 +93,7 @@ class UpdateUser(BaseModel):
         return confirm_password
 
 
-class UserOut(BaseModel):
+class UserBaseOut(BaseModel):
     id: int
     first_name: str
     last_name: str
@@ -99,5 +101,7 @@ class UserOut(BaseModel):
     status: str
     created_ts: str
 
-    class Config:
-        from_attributes = True
+
+class UserOut(UserBaseOut):
+    roles: Optional[list] = []
+    pipelines: Optional[List[PipelineOut]] = []

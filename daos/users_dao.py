@@ -1,7 +1,9 @@
 from typing import List
 
+from sqlalchemy import select, delete, update, and_
 from sqlalchemy.exc import IntegrityError
-from sqlalchemy import select, delete, update
+from sqlalchemy.orm import joinedload
+
 from models import db_models as model
 from utils import database
 
@@ -20,6 +22,22 @@ class UserDAO:
         """Fetch a specific user by its ID."""
         async with self.db:
             result = await self.db.execute(select(model.Users).where(model.Users.id == user_id))
+            return result.scalars().first()
+
+    async def get_detailed_user_info(self, user_id: int):
+        """Fetch a user with their roles and pipeline access."""
+        async with self.db:
+            stmt = (
+                select(model.Users)
+                .options(
+                    joinedload(model.Users.roles)
+                    .joinedload(model.AccessRoleMembers.role)
+                    .joinedload(model.AccessRoles.pipelines)
+                    .joinedload(model.AccessRolePipelines.pipeline)
+                )
+                .where(model.Users.id == user_id)
+            )
+            result = await self.db.execute(stmt)
             return result.scalars().first()
 
     async def create(self, user_data) -> model.Users:
@@ -53,3 +71,20 @@ class UserDAO:
         async with self.db:
             await self.db.execute(delete(model.Users).where(model.Users.id == user_id))
             await self.db.commit()
+
+    async def get_user_unassigned_roles(self, user_id: int):
+        """Fetch all roles that are not assigned to a specific user."""
+        async with self.db:
+            stmt = (
+                select(model.AccessRoles)
+                .outerjoin(
+                    model.AccessRoleMembers,
+                    and_(
+                        model.AccessRoles.id == model.AccessRoleMembers.role_id,
+                        model.AccessRoleMembers.user_id == user_id
+                    )
+                )
+                .where(model.AccessRoleMembers.user_id.is_(None))
+            )
+            result = await self.db.execute(stmt)
+            return result.scalars().all()
