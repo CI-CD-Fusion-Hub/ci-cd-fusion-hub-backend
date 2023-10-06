@@ -19,6 +19,14 @@ class PipelineDAO:
             result = await self.db.execute(select(model.Pipelines))
             return result.scalars().all()
 
+    async def get_by_application_type(self, app_type: str) -> List[model.Pipelines]:
+        """Fetch all pipelines for a specific application type."""
+        async with self.db:
+            result = await self.db.execute(
+                select(model.Pipelines).join(model.Applications).where(model.Applications.type == app_type)
+            )
+            return result.scalars().all()
+
     async def get_by_id(self, pipeline_id: int) -> model.Pipelines:
         """Fetch a specific pipeline by its ID."""
         async with self.db:

@@ -2,7 +2,7 @@ from daos.applications_dao import ApplicationDAO
 from exceptions.application_exception import ApplicationNotFoundException
 from schemas.applications_sch import ApplicationOut, CreateApplication, UpdateApplication
 from utils.enums import AppType
-from utils.gitlab import Gitlab
+from utils.clients.gitlab import Gitlab
 from utils.jenkins import Jenkins
 from utils.response import ok, error
 

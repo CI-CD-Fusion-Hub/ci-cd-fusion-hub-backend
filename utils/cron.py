@@ -6,7 +6,7 @@ from typing import List, Dict, Set
 from daos.applications_dao import ApplicationDAO
 from daos.pipelines_dao import PipelineDAO
 from utils.enums import AppType
-from utils.gitlab import Gitlab
+from utils.clients.gitlab import Gitlab
 from utils.jenkins import Jenkins
 from utils.logger import Logger
 
@@ -48,7 +48,8 @@ class Cron:
         for fetched_pipeline in fetched_pipelines:
             unique_name = f"{fetched_pipeline['name']}-{fetched_pipeline['app']}"
             if unique_name not in existing_pipeline_names and unique_name not in unique_names:
-                new_pipeline = {"name": fetched_pipeline['name'], "application_id": fetched_pipeline['app']}
+                new_pipeline = {"name": fetched_pipeline['name'], "application_id": fetched_pipeline['app'],
+                                "project_id": str(fetched_pipeline['id'])}
                 new_pipelines.append(new_pipeline)
                 unique_names.add(unique_name)
                 LOGGER.debug(f"Identified new pipeline: {unique_name}")
