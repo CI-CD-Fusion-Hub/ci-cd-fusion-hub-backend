@@ -4,10 +4,19 @@ from datetime import datetime
 import httpx
 
 from daos.applications_dao import ApplicationDAO
+from utils.clients.base import BaseClient
 from utils.enums import AppType
 
 
-class Gitlab:
+class GitlabClient(BaseClient):
+    async def check_connection(self):
+        """Check if the provided GitLab private token is valid."""
+        try:
+            response = await self._client.get(url=f"{self._base_url}/user")
+            return response.status_code == 200
+        except httpx.RequestError:
+            return False
+
     def __init__(self, base_url: str, token: str, application_id: int = None):
         """Initialize the GitLab client."""
         self._client = httpx.AsyncClient(headers={'PRIVATE-TOKEN': token}, timeout=3)
@@ -24,14 +33,6 @@ class Gitlab:
     def escape_ansi(line):
         ansi_escape = re.compile(r'(\x9B|\x1B\[)[0-?]*[ -\/]*[@-~]')
         return ansi_escape.sub('', line)
-
-    async def check_application_connection(self) -> bool:
-        """Check if the provided GitLab private token is valid."""
-        try:
-            response = await self._client.get(url=f"{self._base_url}/user")
-            return response.status_code == 200
-        except httpx.RequestError:
-            return False
 
     async def get_projects_list(self):
         try:

@@ -2,8 +2,8 @@ from daos.applications_dao import ApplicationDAO
 from exceptions.application_exception import ApplicationNotFoundException
 from schemas.applications_sch import ApplicationOut, CreateApplication, UpdateApplication
 from utils.enums import AppType
-from utils.clients.gitlab import Gitlab
-from utils.jenkins import Jenkins
+from utils.clients.gitlab import GitlabClient
+from utils.clients.jenkins import JenkinsClient
 from utils.response import ok, error
 
 
@@ -52,9 +52,9 @@ class ApplicationService:
         client = None
 
         if app_data.type == AppType.GITLAB.value:
-            client = Gitlab(base_url=app_data.base_url, token=app_data.auth_pass)
+            client = GitlabClient(base_url=app_data.base_url, token=app_data.auth_pass)
         elif app_data.type == AppType.JENKINS.value:
-            client = Jenkins(base_url=app_data.base_url, user=app_data.auth_user, token=app_data.auth_pass)
+            client = JenkinsClient(base_url=app_data.base_url, user=app_data.auth_user, token=app_data.auth_pass)
 
         if client is None:
             return error(message="Invalid application type provided.")

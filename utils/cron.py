@@ -6,8 +6,8 @@ from typing import List, Dict, Set
 from daos.applications_dao import ApplicationDAO
 from daos.pipelines_dao import PipelineDAO
 from utils.enums import AppType
-from utils.clients.gitlab import Gitlab
-from utils.jenkins import Jenkins
+from utils.clients.gitlab import GitlabClient
+from utils.clients.jenkins import JenkinsClient
 from utils.logger import Logger
 
 LOGGER = Logger().start_logger()
@@ -28,7 +28,7 @@ class Cron:
     @staticmethod
     async def _fetch_from_jenkins(application) -> List[Dict]:
         LOGGER.debug(f"Going to fetch application of type: {application.type}")
-        jenkins_client = await Jenkins.from_application_id(application.id)
+        jenkins_client = await JenkinsClient.from_application_id(application.id)
         jenkins_pipelines = await jenkins_client.get_pipelines_list()
         LOGGER.debug(f"Fetched {len(jenkins_pipelines)} pipelines from Jenkins for application ID: {application.name}")
         return jenkins_pipelines
@@ -36,7 +36,7 @@ class Cron:
     @staticmethod
     async def _fetch_from_gitlab(application) -> List[Dict]:
         LOGGER.debug(f"Going to fetch application of type: {application.type}")
-        gitlab_client = await Gitlab.from_application_id(application.id)
+        gitlab_client = await GitlabClient.from_application_id(application.id)
         gitlab_pipelines = await gitlab_client.get_projects_list()
         LOGGER.debug(f"Fetched {len(gitlab_pipelines)} pipelines from GitLab for application ID: {application.name}")
         return gitlab_pipelines

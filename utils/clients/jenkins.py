@@ -3,9 +3,10 @@ import base64
 import httpx
 
 from daos.applications_dao import ApplicationDAO
+from utils.clients.base import BaseClient
 
 
-class Jenkins:
+class JenkinsClient(BaseClient):
     def __init__(self, base_url: str, user: str, token: str, application_id: int = None):
         """Initialize the Jenkins client."""
         self._user = user
@@ -27,7 +28,7 @@ class Jenkins:
             "Authorization": f"Basic {credentials}"
         }
 
-    async def check_application_connection(self) -> bool:
+    async def check_connection(self):
         """Check if the provided Jenkins username and API token are valid."""
         try:
             response = await self._client.get(f"{self._base_url}/whoAmI/api/json")
