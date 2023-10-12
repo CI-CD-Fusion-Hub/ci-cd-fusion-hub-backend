@@ -2,7 +2,7 @@ from typing import List
 
 from fastapi import APIRouter, Depends
 
-from schemas.access_roles_sch import CreateAccessRole, UpdateAccessRole, AddMembersToAccessRole, AddPipelineToAccessRole
+from schemas.access_roles_sch import CreateAccessRole, UpdateAccessRole
 from services.access_roles_srv import AccessRolesService
 
 router = APIRouter()
@@ -48,9 +48,9 @@ async def get_unassigned_users_for_role(access_role_id: int, access_roles_servic
 
 
 @router.post("/access_roles/{access_role_id}/users", tags=["access_roles"])
-async def add_member_to_access_role(access_role_id: int, members: List[AddMembersToAccessRole],
+async def add_member_to_access_role(access_role_id: int, members: List[int],
                                     access_roles_service: AccessRolesService = Depends(create_access_roles_service)):
-    return await access_roles_service.add_members_to_role(access_role_id, [member.user_id for member in members])
+    return await access_roles_service.add_members_to_role(access_role_id, members)
 
 
 @router.delete("/access_roles/{access_role_id}/users/{user_id}", tags=["access_roles"])
@@ -66,10 +66,9 @@ async def get_unassigned_pipelines_for_role(access_role_id: int, access_roles_se
 
 
 @router.post("/access_roles/{access_role_id}/pipelines", tags=["access_roles"])
-async def add_pipeline_to_access_role(access_role_id: int, pipelines: List[AddPipelineToAccessRole],
+async def add_pipeline_to_access_role(access_role_id: int, pipelines: List[int],
                                       access_roles_service: AccessRolesService = Depends(create_access_roles_service)):
-    return await access_roles_service.add_pipeline_to_role(access_role_id,
-                                                           [pipeline.pipeline_id for pipeline in pipelines])
+    return await access_roles_service.add_pipeline_to_role(access_role_id, pipelines)
 
 
 @router.delete("/access_roles/{access_role_id}/pipelines/{pipeline_id}", tags=["access_roles"])

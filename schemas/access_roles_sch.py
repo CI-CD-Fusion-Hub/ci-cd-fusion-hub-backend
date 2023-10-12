@@ -23,11 +23,3 @@ class AccessRoleBaseOut(BaseModel):
 class AccessRoleOut(AccessRoleBaseOut):
     members: Optional[list] = None
     pipelines: Optional[list] = None
-
-
-class AddMembersToAccessRole(BaseModel):
-    user_id: int
-
-
-class AddPipelineToAccessRole(BaseModel):
-    pipeline_id: int
