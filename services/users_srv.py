@@ -1,7 +1,9 @@
 import hashlib
+from fastapi import Request
+
 
 from exceptions.user_exception import UserNotFoundException
-from schemas.users_sch import CreateUser, UserOut, UpdateUser, UserBaseOut
+from schemas.users_sch import CreateUser, UserOut, UpdateUser, UserBaseOut, LoginUser
 from daos.users_dao import UserDAO
 from utils.response import ok, error
 
@@ -66,3 +68,26 @@ class UserService:
         return ok(message="Successfully provided unassigned users for access role.",
                   data=[role.as_dict() for role in unassigned_roles])
 
+    async def login(self, request: Request, credentials: LoginUser):
+        user = await self.user_dao.get_by_email(credentials.email)
+        if not user:
+            raise UserNotFoundException(f"User with Email {credentials.email} does not exist.")
+
+        if user.status != 'active':
+            raise UserNotFoundException(f"User with Email {credentials.email} is inactive.")
+
+        if not self.verify_password(credentials.password, user.password):
+            raise UserNotFoundException("Invalid password or email.")
+
+        request.session['USER_NAME'] = credentials.email
+
+        return ok(message="Successfully logged in.")
+
+    @classmethod
+    def _verify_password(cls, plain_password: str, hashed_password: str) -> bool:
+        return hashlib.sha512(plain_password.encode('utf-8')).hexdigest() == hashed_password
+
+    @classmethod
+    async def logout(cls, request):
+        request.session.clear()
+        return ok(message="Successful logout.")

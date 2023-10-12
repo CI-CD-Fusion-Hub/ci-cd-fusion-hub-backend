@@ -22,7 +22,8 @@ from routers import (
     users_rt,
     applications_rt,
     access_roles_rt,
-    pipelines_rt
+    pipelines_rt,
+    auth_rt
 )
 
 ###############
@@ -35,7 +36,8 @@ Base.metadata.create_all(bind=create_engine(SQLALCHEMY_DATABASE_URL))
 ###############
 config = Settings().app
 app = FastAPI(docs_url=f"{config['root_path']}/docs")
-app.add_middleware(SessionMiddleware, secret_key=config['secret_key'], https_only=False)
+app.add_middleware(SessionMiddleware, secret_key=config['secret_key'], https_only=False,
+                   max_age=int(config['session_lifetime']))
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -52,6 +54,7 @@ app.include_router(status_rt.router, prefix=config['root_path'])
 app.include_router(applications_rt.router, prefix=config['root_path'])
 app.include_router(access_roles_rt.router, prefix=config['root_path'])
 app.include_router(pipelines_rt.router, prefix=config['root_path'])
+app.include_router(auth_rt.router, prefix=config['root_path'])
 
 
 ###############

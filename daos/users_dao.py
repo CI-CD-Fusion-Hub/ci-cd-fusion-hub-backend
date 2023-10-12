@@ -24,6 +24,12 @@ class UserDAO:
             result = await self.db.execute(select(model.Users).where(model.Users.id == user_id))
             return result.scalars().first()
 
+    async def get_by_email(self, email: str) -> model.Users:
+        """Fetch a specific user by its Email."""
+        async with self.db:
+            result = await self.db.execute(select(model.Users).where(model.Users.email == email))
+            return result.scalars().first()
+
     async def get_detailed_user_info(self, user_id: int):
         """Fetch a user with their roles and pipeline access."""
         async with self.db:

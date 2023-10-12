@@ -8,14 +8,14 @@ LOGGER = Logger().start_logger()
 config = Settings()
 
 
-def token_required(function_to_protect):
+# This approach is fast but consider check if user is inactive(This will cause call to DB every request)
+def auth_required(function_to_protect):
     @wraps(function_to_protect)
     async def wrapper(request: Request, *args, **kwargs):
-        headers = request.headers
-
-        if config.app['auth_header_name'] in headers and headers[config.app['auth_header_name']] in config.app['access_tokens']:
+        if request.session.get('USER_NAME'):
             return await function_to_protect(request, *args, **kwargs)
 
         return unauthorized()
 
     return wrapper
+

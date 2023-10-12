@@ -105,3 +105,8 @@ class UserBaseOut(BaseModel):
 class UserOut(UserBaseOut):
     roles: Optional[list] = []
     pipelines: Optional[List[PipelineOut]] = []
+
+
+class LoginUser(BaseModel):
+    email: str
+    password: str
