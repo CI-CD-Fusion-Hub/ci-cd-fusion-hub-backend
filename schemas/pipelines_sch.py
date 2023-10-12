@@ -26,3 +26,11 @@ class GitlabStartPipelineParams(BaseModel):
         extra = "allow"
 
 
+class JenkinsStartPipelineParams(BaseModel):
+    class Config:
+        json_schema_extra = {
+            "parameters": {
+                "branch": "main"
+            }
+        }
+        extra = "allow"

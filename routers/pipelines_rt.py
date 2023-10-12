@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends
 
-from schemas.pipelines_sch import GitlabStartPipelineParams
+from schemas.pipelines_sch import GitlabStartPipelineParams, JenkinsStartPipelineParams
 from services.pipelines_srv import PipelinesService
 
 router = APIRouter()
@@ -10,6 +10,9 @@ def create_pipeline_service():
     return PipelinesService()
 
 
+####################
+# Gitlab pipelines
+####################
 @router.get("/pipelines/gitlab", tags=["gitlab_pipelines"])
 async def get_all_gitlab_pipeline(pipeline_service: PipelinesService = Depends(create_pipeline_service)):
     return await pipeline_service.get_all_gitlab_pipelines()
@@ -57,6 +60,41 @@ async def get_gitlab_pipeline_build_job_trace(pipeline_id: int, build_id: int, j
     return await pipeline_service.get_gitlab_pipeline_build_job_trace(pipeline_id, build_id, job_id)
 
 
+####################
+# Jenkins pipelines
+####################
+@router.get("/pipelines/jenkins", tags=["jenkins_pipelines"])
+async def get_all_jenkins_pipelines(pipeline_service: PipelinesService = Depends(create_pipeline_service)):
+    return await pipeline_service.get_all_jenkins_pipelines()
+
+
+@router.get("/pipelines/jenkins/{pipeline_id}/builds", tags=["jenkins_pipelines"])
+async def get_jenkins_pipeline_builds(pipeline_id: int,
+                                      pipeline_service: PipelinesService = Depends(create_pipeline_service)):
+    return await pipeline_service.get_jenkins_pipeline_builds(pipeline_id)
+
+
+@router.post("/pipelines/jenkins/{pipeline_id}/builds", tags=["jenkins_pipelines"])
+async def run_new_jenkins_pipeline_build(pipeline_id: int, params: JenkinsStartPipelineParams,
+                                         pipeline_service: PipelinesService = Depends(create_pipeline_service)):
+    return await pipeline_service.run_new_jenkins_pipeline_build(pipeline_id, params)
+
+
+@router.get("/pipelines/jenkins/{pipeline_id}/builds/{build_id}", tags=["jenkins_pipelines"])
+async def get_jenkins_pipeline_build(pipeline_id: int, build_id: int,
+                                     pipeline_service: PipelinesService = Depends(create_pipeline_service)):
+    return await pipeline_service.get_jenkins_pipeline_build(pipeline_id, build_id)
+
+
+@router.post("/pipelines/jenkins/{pipeline_id}/builds/{build_id}/cancel", tags=["jenkins_pipelines"])
+async def cancel_jenkins_pipeline_build(pipeline_id: int, build_id: int,
+                                        pipeline_service: PipelinesService = Depends(create_pipeline_service)):
+    return await pipeline_service.cancel_jenkins_pipeline_build(pipeline_id, build_id)
+
+
+####################
+# Database pipelines
+####################
 @router.get("/pipelines", tags=["pipelines"])
 async def get_all_pipelines(pipeline_service: PipelinesService = Depends(create_pipeline_service)):
     return await pipeline_service.get_all_pipelines()
