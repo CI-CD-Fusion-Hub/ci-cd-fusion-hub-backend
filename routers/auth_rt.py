@@ -10,11 +10,11 @@ def create_user_service():
     return UserService()
 
 
-@router.post("/login", tags=["users"])
+@router.post("/login", tags=["auth"])
 async def login_user(request: Request, credentials: LoginUser, user_service: UserService = Depends(create_user_service)):
     return await user_service.login(request, credentials)
 
 
-@router.post("/logout", tags=["users"])
+@router.post("/logout", tags=["auth"])
 async def login_user(request: Request, user_service: UserService = Depends(create_user_service)):
     return await user_service.logout(request)
