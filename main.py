@@ -1,6 +1,8 @@
 import uvicorn
 from fastapi import FastAPI
-from config import middlewares_config, exception_handlers_config, routers_config, event_config
+from config import middlewares_config as middlewares, \
+    exception_handlers_config as exception_handlers, \
+    routers_config as routers, events_config as events
 
 from config.config import Settings
 
@@ -8,10 +10,10 @@ from config.config import Settings
 config = Settings().app
 app = FastAPI(docs_url=f"{config['root_path']}/docs")
 
-middlewares_config.configure(app)
-routers_config.configure(app)
-exception_handlers_config.configure(app)
-event_config.configure_events(app)
+middlewares.configure(app)
+routers.configure(app)
+exception_handlers.configure(app)
+events.configure(app)
 
 if __name__ == "__main__":
     uvicorn.run(

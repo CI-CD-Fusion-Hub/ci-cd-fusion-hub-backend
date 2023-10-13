@@ -24,6 +24,6 @@ async def shutdown_event():
     await asyncio.gather(*tasks, return_exceptions=True)
 
 
-def configure_events(app):
+def configure(app):
     app.add_event_handler("startup", startup_event)
     app.add_event_handler("shutdown", shutdown_event)
