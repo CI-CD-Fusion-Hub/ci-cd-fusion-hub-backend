@@ -76,7 +76,7 @@ class UserService:
         if user.status != 'active':
             raise UserNotFoundException(f"User with Email {credentials.email} is inactive.")
 
-        if not self.verify_password(credentials.password, user.password):
+        if not self._verify_password(credentials.password, user.password):
             raise UserNotFoundException("Invalid password or email.")
 
         request.session['USER_NAME'] = credentials.email

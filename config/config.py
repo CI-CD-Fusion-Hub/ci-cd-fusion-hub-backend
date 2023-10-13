@@ -18,6 +18,9 @@ class Settings(BaseSettings):
     app_session_lifetime: int = Field(..., env="app_session_lifetime")
     app_disable_auth: bool = Field(..., env="app_disable_auth")
     app_pipelines_sync_interval: int = Field(..., env="app_pipelines_sync_interval")
+    app_env: str = Field(..., env="app_env")
+    app_ssl_key: str = Field(..., env="app_ssl_key")
+    app_ssl_cert: str = Field(..., env="app_ssl_cert")
 
     db_host: str = Field(..., env="db_host")
     db_user: str = Field(..., env="db_user")
@@ -39,7 +42,10 @@ class Settings(BaseSettings):
             "port": int(self.app_port),
             "session_lifetime": self.app_session_lifetime,
             "disable_auth": self.app_disable_auth,
-            "pipelines_sync_interval": int(self.app_pipelines_sync_interval)
+            "pipelines_sync_interval": int(self.app_pipelines_sync_interval),
+            "env": self.app_env,
+            "ssl_cert": self.app_ssl_cert,
+            "ssl_key": self.app_ssl_key
         }
 
     @property
