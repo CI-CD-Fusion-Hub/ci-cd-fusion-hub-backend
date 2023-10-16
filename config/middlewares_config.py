@@ -8,18 +8,12 @@ config = Settings().app
 
 def configure(app: FastAPI):
 
-    # Set default values
     allow_origins = ["*"]
     same_site_value = "Strict"
-    ssl_cert = None
-    ssl_key = None
 
-    # Override values for non-prod environments
     if config["env"] != 'prod':
-        allow_origins = ["http://10.90.90.3:5173"]
+        allow_origins = ["http://10.90.90.2:5173"]
         same_site_value = "None"
-        ssl_cert = "localhost.crt"
-        ssl_key = "localhost.key"
 
     app.add_middleware(
         CORSMiddleware,

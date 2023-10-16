@@ -53,7 +53,7 @@ class UserDAO:
             last_name=user_data.last_name,
             email=user_data.email,
             password=user_data.password,
-            status="active"
+            status=user_data.status
         )
         try:
             async with self.db:

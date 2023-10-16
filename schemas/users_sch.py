@@ -13,6 +13,7 @@ class CreateUser(BaseModel):
     email: str
     password: str
     confirm_password: str
+    status: str
 
     class Config:
         json_schema_extra = {
@@ -30,6 +31,16 @@ class CreateUser(BaseModel):
         if "password" in values and confirm_password != values["password"]:
             raise ValueError("password and confirm_password do not match")
         return confirm_password
+
+    @validator("status")
+    def status_check(cls, status):
+        """Validates that status is 'active' or 'inactive'"""
+        status_list = ["active", "inactive"]
+        if status not in status_list:
+            raise ValueError(
+                f"Invalid status {status}. Please, provide valid status {status_list}.")
+
+        return status
 
     @validator("email")
     def email_check(cls, email):
@@ -92,6 +103,15 @@ class UpdateUser(BaseModel):
                 raise ValueError("password and confirm_password do not match")
         return confirm_password
 
+    @validator("status")
+    def status_check(cls, status):
+        """Validates that status is 'active' or 'inactive'"""
+        status_list = ["active", "inactive"]
+        if status not in status_list:
+            raise ValueError(
+                f"Invalid status {status}. Please, provide valid status {status_list}.")
+
+        return status
 
 class UserBaseOut(BaseModel):
     id: int
