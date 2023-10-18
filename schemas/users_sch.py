@@ -31,10 +31,9 @@ class ValidatorUtils:
     def validate_status(cls, status: str) -> str:
         """Validates that status is 'active' or 'inactive'."""
         if status in (us.value for us in UserStatus):
-            raise ValueError(
-                f"Invalid status {status}. Please, provide valid status {', '.join(us.value for us in UserStatus)}.")
-
-        return status
+            return status
+        raise ValueError(
+            f"Invalid status {status}. Please, provide valid status {', '.join(us.value for us in UserStatus)}.")
 
     @classmethod
     def validate_access_level(cls, access_level: str) -> str:
@@ -120,7 +119,7 @@ class UpdateUser(BaseModel):
     def check_access_level(cls, access_level):
         return ValidatorUtils.validate_access_level(access_level)
 
-    @field_validator("status")
+    @field_validator("status", check_fields=True)
     def status_check(cls, status):
         return ValidatorUtils.validate_status(status)
 
