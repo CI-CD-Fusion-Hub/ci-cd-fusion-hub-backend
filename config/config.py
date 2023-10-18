@@ -21,6 +21,8 @@ class Settings(BaseSettings):
     app_env: str = Field(..., env="app_env")
     app_ssl_key: str = Field(..., env="app_ssl_key")
     app_ssl_cert: str = Field(..., env="app_ssl_cert")
+    app_admin_email: str = Field(..., env="app_admin_email")
+    app_admin_pass: str = Field(..., env="app_admin_pass")
 
     db_host: str = Field(..., env="db_host")
     db_user: str = Field(..., env="db_user")
@@ -45,7 +47,9 @@ class Settings(BaseSettings):
             "pipelines_sync_interval": int(self.app_pipelines_sync_interval),
             "env": self.app_env,
             "ssl_cert": self.app_ssl_cert,
-            "ssl_key": self.app_ssl_key
+            "ssl_key": self.app_ssl_key,
+            "admin_email": self.app_admin_email,
+            "admin_pass": self.app_admin_pass
         }
 
     @property

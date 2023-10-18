@@ -59,7 +59,7 @@ class ApplicationService:
         if client is None:
             return error(message="Invalid application type provided.")
 
-        if await client.check_application_connection():
+        if await client.check_connection():
             return ok(message="Application is accessible!")
         else:
             return error(message="Application is NOT accessible.")

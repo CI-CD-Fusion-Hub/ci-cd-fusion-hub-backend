@@ -46,6 +46,22 @@ class UserDAO:
             result = await self.db.execute(stmt)
             return result.scalars().first()
 
+    async def get_detailed_user_info_by_email(self, email: str):
+        """Fetch a user with their roles and pipeline access."""
+        async with self.db:
+            stmt = (
+                select(model.Users)
+                .options(
+                    joinedload(model.Users.roles)
+                    .joinedload(model.AccessRoleMembers.role)
+                    .joinedload(model.AccessRoles.pipelines)
+                    .joinedload(model.AccessRolePipelines.pipeline)
+                )
+                .where(model.Users.email == email)
+            )
+            result = await self.db.execute(stmt)
+            return result.scalars().first()
+
     async def create(self, user_data) -> model.Users:
         """Create a new user."""
         user = model.Users(
@@ -53,7 +69,8 @@ class UserDAO:
             last_name=user_data.last_name,
             email=user_data.email,
             password=user_data.password,
-            status=user_data.status
+            status=user_data.status,
+            access_level=user_data.access_level
         )
         try:
             async with self.db:

@@ -5,6 +5,7 @@ from fastapi import Request
 from exceptions.user_exception import UserNotFoundException
 from schemas.users_sch import CreateUser, UserOut, UpdateUser, UserBaseOut, LoginUser
 from daos.users_dao import UserDAO
+from utils.enums import AccessLevel, UserStatus
 from utils.response import ok, error
 
 
@@ -14,9 +15,13 @@ class UserService:
 
     async def get_all_users(self):
         users = await self.user_dao.get_all()
-        return ok(message="Successfully provided all users.", data=[UserBaseOut.model_validate(user.as_dict()) for user in users])
+        return ok(message="Successfully provided all users.",
+                  data=[UserBaseOut.model_validate(user.as_dict()) for user in users])
 
-    async def get_user_by_id(self, user_id: int):
+    async def get_user_by_id(self, request: Request, user_id: int):
+        if request.session.get('ACCESS_LEVEL') != AccessLevel.ADMIN.value and request.session.get('ID') != user_id:
+            raise UserNotFoundException(f"User with ID {user_id} does not exist.")
+
         user = await self.user_dao.get_detailed_user_info(user_id)
         if not user:
             raise UserNotFoundException(f"User with ID {user_id} does not exist.")
@@ -73,15 +78,17 @@ class UserService:
         if not user:
             raise UserNotFoundException(f"User with Email {credentials.email} does not exist.")
 
-        if user.status != 'active':
+        if user.status != UserStatus.ACTIVE.value:
             raise UserNotFoundException(f"User with Email {credentials.email} is inactive.")
 
         if not self._verify_password(credentials.password, user.password):
             raise UserNotFoundException("Invalid password or email.")
 
         request.session['USER_NAME'] = credentials.email
+        request.session['ACCESS_LEVEL'] = user.access_level
+        request.session['STATUS'] = user.status
 
-        return ok(message="Successfully logged in.")
+        return ok(message="Successfully logged in.", data=UserBaseOut.model_validate(user.as_dict()))
 
     @classmethod
     def _verify_password(cls, plain_password: str, hashed_password: str) -> bool:

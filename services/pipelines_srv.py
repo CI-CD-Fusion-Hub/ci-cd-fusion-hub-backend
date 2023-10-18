@@ -1,3 +1,5 @@
+from typing import List
+
 from fastapi.responses import JSONResponse
 
 from daos.pipelines_dao import PipelineDAO
@@ -27,8 +29,8 @@ class PipelinesService:
 
         return pipeline, client
 
-    async def get_all_pipelines(self) -> JSONResponse:
-        pipelines = await self.pipelines_dao.get_all()
+    async def get_all_pipelines(self, ids: List[int]) -> JSONResponse:
+        pipelines = await self.pipelines_dao.get_pipelines_by_ids(ids)
         return ok(message="Successfully provided all pipelines.",
                   data=[PipelineOut.model_validate(pipeline.as_dict()) for pipeline in pipelines])
 

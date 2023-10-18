@@ -1,6 +1,6 @@
 from typing import Optional
 
-from pydantic import BaseModel, validator
+from pydantic import BaseModel, field_validator
 
 from utils.enums import AppType
 
@@ -13,12 +13,12 @@ class CreateApplication(BaseModel):
     type: str
     status: str
 
-    @validator("type", pre=True, always=True)
-    def check_type(cls, type):
-        if type in (app_type.value for app_type in AppType):
-            return type
+    @field_validator("type", check_fields=True)
+    def check_type(cls, value):
+        if value in (app_type.value for app_type in AppType):
+            return value
         raise ValueError(
-            f"{type} is not a valid application type. Valid types are: {', '.join(app_type.value for app_type in AppType)}")
+            f"{value} is not a valid application type. Valid types are: {', '.join(app_type.value for app_type in AppType)}")
 
     class Config:
         json_schema_extra = {

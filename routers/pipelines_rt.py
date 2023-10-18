@@ -1,8 +1,10 @@
+from typing import List
+
 from fastapi import APIRouter, Depends, Request
 
 from schemas.pipelines_sch import GitlabStartPipelineParams, JenkinsStartPipelineParams
 from services.pipelines_srv import PipelinesService
-from utils.check_session import auth_required
+from utils.check_session import auth_required, get_user_pipelines
 
 router = APIRouter()
 
@@ -16,7 +18,9 @@ def create_pipeline_service():
 ####################
 @router.get("/pipelines/gitlab", tags=["gitlab_pipelines"])
 @auth_required
-async def get_all_gitlab_pipeline(request: Request, pipeline_service: PipelinesService = Depends(create_pipeline_service)):
+async def get_all_gitlab_pipeline(request: Request,
+                                  pipeline_service: PipelinesService = Depends(create_pipeline_service),
+                                  ser_pipelines: List[int] = Depends(get_user_pipelines)):
     return await pipeline_service.get_all_gitlab_pipelines()
 
 
@@ -111,11 +115,14 @@ async def cancel_jenkins_pipeline_build(request: Request, pipeline_id: int, buil
 ####################
 @router.get("/pipelines", tags=["pipelines"])
 @auth_required
-async def get_all_pipelines(request: Request, pipeline_service: PipelinesService = Depends(create_pipeline_service)):
-    return await pipeline_service.get_all_pipelines()
+async def get_all_pipelines(request: Request,
+                            pipeline_service: PipelinesService = Depends(create_pipeline_service),
+                            ser_pipelines: List[int] = Depends(get_user_pipelines)):
+    return await pipeline_service.get_all_pipelines(ser_pipelines)
 
 
 @router.get("/pipelines/{pipeline_id}", tags=["pipelines"])
 @auth_required
-async def get_pipeline(request: Request, pipeline_id: int, pipeline_service: PipelinesService = Depends(create_pipeline_service)):
+async def get_pipeline(request: Request, pipeline_id: int,
+                       pipeline_service: PipelinesService = Depends(create_pipeline_service)):
     return await pipeline_service.get_pipeline_by_id(pipeline_id)

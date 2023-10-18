@@ -16,6 +16,7 @@ class Users(Base):
     password = Column(String)
     created_ts = Column(TIMESTAMP, default=func.now())
     status = Column(String)
+    access_level = Column(String)
 
     roles = relationship("AccessRoleMembers", back_populates="user")
 
@@ -26,7 +27,8 @@ class Users(Base):
             'last_name': self.last_name,
             'email': self.email,
             'created_ts': self.created_ts.isoformat() if self.created_ts else None,
-            'status': self.status
+            'status': self.status,
+            'access_level': self.access_level
         }
 
 
@@ -53,7 +55,7 @@ class AccessRoles(Base):
 class AccessRoleMembers(Base):
     __tablename__ = "access_role_members"
 
-    user_id = Column(Integer, ForeignKey('users.id'), primary_key=True)
+    user_id = Column(Integer, ForeignKey('users.id', ondelete='CASCADE'), primary_key=True)
     role_id = Column(Integer, ForeignKey('access_roles.id'), primary_key=True)
     created_ts = Column(TIMESTAMP, default=func.now())
 
