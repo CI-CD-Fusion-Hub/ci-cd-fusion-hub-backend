@@ -19,6 +19,12 @@ class AccessRolesDAO:
             result = await self.db.execute(select(model.AccessRoles))
             return result.scalars().all()
 
+    async def get_access_roles_by_ids(self, ids: List[int]) -> List[model.AccessRoles]:
+        """Fetch all access roles by ids."""
+        async with self.db:
+            result = await self.db.execute(select(model.AccessRoles).where(model.AccessRoles.id.in_(ids)))
+            return result.scalars().all()
+
     async def get_by_id(self, access_role_id: int) -> model.AccessRoles:
         """Fetch a specific access role by its ID."""
         async with self.db:
@@ -151,5 +157,7 @@ class AccessRolesDAO:
                                   .where(model.AccessRolePipelines.access_role_id == access_role_id)
                                   .where(model.AccessRolePipelines.pipeline_id == pipeline_id))
             await self.db.commit()
+
+
 
 

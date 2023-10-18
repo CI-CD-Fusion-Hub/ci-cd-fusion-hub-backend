@@ -117,14 +117,14 @@ class JenkinsClient(BaseClient):
         return build_info
 
     async def start_pipeline(self, pipeline_name: str, parameters: dict):
-        pipeline_variables = await self.get_pipeline_variables(pipeline_name)
+        pipeline_variables = await self.get_pipeline_params(pipeline_name)
         build_url = "buildWithParameters" if len(pipeline_variables) > 0 else "build"
 
         response = (await self._client.post(f"{self._base_url}/job/{pipeline_name}/{build_url}", json=parameters))
         if not response.is_success:
             raise ValueError("Failed to start Jenkins job.")
 
-    async def get_pipeline_variables(self, pipeline_name: str):
+    async def get_pipeline_params(self, pipeline_name: str):
         result = (await self._client.get(f"{self._base_url}/job/{pipeline_name}/api/json?tree=property[*[*[*]]]")).json()
 
         variables = []

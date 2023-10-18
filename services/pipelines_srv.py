@@ -81,6 +81,11 @@ class PipelinesService:
         data = await client.cancel_pipeline(pipeline.project_id, build_id)
         return ok(message="Successfully provided gitlab pipeline build.", data=data)
 
+    async def get_gitlab_pipeline_params(self, pipeline_id: int) -> JSONResponse:
+        pipeline, client = await self._get_pipeline_and_client(pipeline_id)
+        params = await client.get_pipeline_params(pipeline.project_id)
+        return ok(message="Successfully provided gitlab pipeline params.", data=params)
+
     async def get_all_jenkins_pipelines(self) -> JSONResponse:
         pipelines = await self.pipelines_dao.get_by_application_type(AppType.JENKINS.value)
         return ok(message="Successfully provided all jenkins pipelines.",
@@ -104,7 +109,13 @@ class PipelinesService:
     async def cancel_jenkins_pipeline_build(self, pipeline_id: int, build_id: int) -> JSONResponse:
         pipeline, client = await self._get_pipeline_and_client(pipeline_id)
         await client.cancel_pipeline(pipeline.name, build_id)
-        return ok(message="Successfully provided gitlab pipeline build.")
+        return ok(message="Successfully canceled jenkins pipeline build.")
+
+    async def get_jenkins_pipeline_params(self, pipeline_id: int) -> JSONResponse:
+        pipeline, client = await self._get_pipeline_and_client(pipeline_id)
+        params = await client.get_pipeline_params(pipeline.name)
+        return ok(message="Successfully provided jenkins pipeline params.", data=params)
+
 
 
 

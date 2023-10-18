@@ -1,8 +1,10 @@
 from typing import List
+from fastapi import Request
 
 from daos.access_roles_dao import AccessRolesDAO
 from exceptions.access_roles_exception import AccessRoleNotFoundException
 from schemas.access_roles_sch import AccessRoleOut, CreateAccessRole, UpdateAccessRole, AccessRoleBaseOut
+from utils.enums import SessionAttributes, AccessLevel
 from utils.response import ok
 
 
@@ -10,12 +12,27 @@ class AccessRolesService:
     def __init__(self):
         self.access_roles_dao = AccessRolesDAO()
 
-    async def get_all_access_roles(self):
-        access_roles = await self.access_roles_dao.get_all()
-        return ok(message="Successfully provided all access_roles.",
-                  data=[AccessRoleBaseOut.model_validate(access_role.as_dict()) for access_role in access_roles])
+    async def get_all_access_roles(self, request: Request):
+        user_access_level = request.session.get(SessionAttributes.USER_ACCESS_LEVEL.value)
+        user_roles = request.session.get(SessionAttributes.USER_ROLES.value)
 
-    async def get_access_roles_by_id(self, access_role_id: int):
+        if user_access_level != AccessLevel.ADMIN.value and user_roles:
+            access_roles = await self.access_roles_dao.get_access_roles_by_ids(user_roles)
+        else:
+            access_roles = await self.access_roles_dao.get_all()
+
+        return ok(
+            message="Successfully provided all access_roles.",
+            data=[AccessRoleBaseOut.model_validate(access_role.as_dict()) for access_role in access_roles]
+        )
+
+    async def get_access_roles_by_id(self, request: Request, access_role_id: int):
+        user_access_level = request.session.get(SessionAttributes.USER_ACCESS_LEVEL.value)
+        user_roles = request.session.get(SessionAttributes.USER_ROLES.value)
+
+        if user_access_level != AccessLevel.ADMIN.value and user_roles and access_role_id not in user_roles:
+            raise AccessRoleNotFoundException(f"Access role with ID {access_role_id} does not exist.")
+
         access_role = await self.access_roles_dao.get_detailed_role_info(access_role_id)
         if not access_role:
             raise AccessRoleNotFoundException(f"Access role with ID {access_role_id} does not exist.")

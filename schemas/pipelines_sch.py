@@ -19,9 +19,7 @@ class PipelineOut(BaseModel):
 class GitlabStartPipelineParams(BaseModel):
     class Config:
         json_schema_extra = {
-            "parameters": {
-                "branch": "main"
-            }
+            "branch": "main"
         }
         extra = "allow"
 

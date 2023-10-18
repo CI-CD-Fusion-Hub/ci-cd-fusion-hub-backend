@@ -38,6 +38,13 @@ async def get_gitlab_pipeline_build(request: Request, pipeline_id: int, build_id
     return await pipeline_service.get_gitlab_pipeline_build(pipeline_id, build_id)
 
 
+@router.get("/pipelines/gitlab/{pipeline_id}/params", tags=["gitlab_pipelines"])
+@auth_required
+async def get_gitlab_pipeline_params(request: Request, pipeline_id: int,
+                                     pipeline_service: PipelinesService = Depends(create_pipeline_service)):
+    return await pipeline_service.get_gitlab_pipeline_params(pipeline_id)
+
+
 @router.post("/pipelines/gitlab/{pipeline_id}/builds", tags=["gitlab_pipelines"])
 @auth_required
 async def run_new_gitlab_pipeline_build(request: Request, pipeline_id: int, params: GitlabStartPipelineParams,
@@ -87,6 +94,13 @@ async def get_all_jenkins_pipelines(request: Request, pipeline_service: Pipeline
 async def get_jenkins_pipeline_builds(request: Request, pipeline_id: int,
                                       pipeline_service: PipelinesService = Depends(create_pipeline_service)):
     return await pipeline_service.get_jenkins_pipeline_builds(pipeline_id)
+
+
+@router.get("/pipelines/jenkins/{pipeline_id}/params", tags=["jenkins_pipelines"])
+@auth_required
+async def get_jenkins_pipeline_params(request: Request, pipeline_id: int,
+                                      pipeline_service: PipelinesService = Depends(create_pipeline_service)):
+    return await pipeline_service.get_jenkins_pipeline_params(pipeline_id)
 
 
 @router.post("/pipelines/jenkins/{pipeline_id}/builds", tags=["jenkins_pipelines"])

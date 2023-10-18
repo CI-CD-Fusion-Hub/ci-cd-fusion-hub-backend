@@ -27,7 +27,7 @@ class PipelineDAO:
             )
             return result.scalars().all()
 
-    async def get_pipelines_by_ids(self, pipeline_ids: List[int]):
+    async def get_pipelines_by_ids(self, pipeline_ids: List[int]) -> List[model.Pipelines]:
         """Fetch all pipelines by ids."""
         async with self.db:
             result = await self.db.execute(select(model.Pipelines).where(model.Pipelines.id.in_(pipeline_ids)))

@@ -5,7 +5,7 @@ from fastapi import Request
 from exceptions.user_exception import UserNotFoundException
 from schemas.users_sch import CreateUser, UserOut, UpdateUser, UserBaseOut, LoginUser
 from daos.users_dao import UserDAO
-from utils.enums import AccessLevel, UserStatus
+from utils.enums import AccessLevel, UserStatus, SessionAttributes
 from utils.response import ok, error
 
 
@@ -19,7 +19,10 @@ class UserService:
                   data=[UserBaseOut.model_validate(user.as_dict()) for user in users])
 
     async def get_user_by_id(self, request: Request, user_id: int):
-        if request.session.get('ACCESS_LEVEL') != AccessLevel.ADMIN.value and request.session.get('ID') != user_id:
+        user_access_level_session = request.session.get(SessionAttributes.USER_ACCESS_LEVEL.value)
+        user_id_session = request.session.get(SessionAttributes.USER_ID.value)
+
+        if user_access_level_session != AccessLevel.ADMIN.value and user_id_session != user_id:
             raise UserNotFoundException(f"User with ID {user_id} does not exist.")
 
         user = await self.user_dao.get_detailed_user_info(user_id)

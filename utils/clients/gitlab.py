@@ -1,7 +1,8 @@
 import re
-from datetime import datetime
-
+import json
 import httpx
+
+from datetime import datetime
 
 from daos.applications_dao import ApplicationDAO
 from utils.clients.base import BaseClient
@@ -75,7 +76,10 @@ class GitlabClient(BaseClient):
         for index, pipeline in enumerate(pipeline_result):
             for stage in result:
                 if stage['pipeline']['id'] == int(pipeline["id"]):
-                    pipeline_result[index]["duration"] += stage["duration"]
+                    if stage["duration"]:
+                        pipeline_result[index]["duration"] += stage["duration"]
+                    else:
+                        pipeline_result[index]["duration"] = 0
                     pipeline_result[index]["commit_msg"] = stage["commit"]["title"]
                     pipeline_result[index]['stages'].append(
                         {"id": stage['id'], "name": stage['stage'], "status": stage['status']})
@@ -111,17 +115,17 @@ class GitlabClient(BaseClient):
         variables = []
 
         if params and params != {}:
-            for variable in params['parameters']:
+            for variable in params:
                 if variable == 'branch':
-                    branch = params['parameters'][variable]
+                    branch = params[variable]
 
                 variables.append({
                     'key': variable,
-                    'value': str(params['parameters'][variable])
+                    'value': str(params[variable])
                 })
 
         result = (await self._client.post(
-            f"{self._base_url}/projects/{project_id}/pipeline?ref={params['parameters']['branch']}",
+            f"{self._base_url}/projects/{project_id}/pipeline?ref={params['branch']}",
             json={'variables': variables})).json()
 
         return result
@@ -144,6 +148,26 @@ class GitlabClient(BaseClient):
 
         return result
 
+    async def get_pipeline_params(self, project_id: str):
+        test = (await self._client.get(f"{self._base_url}/projects/{project_id}/repository/files/parameters.json/raw"
+                                       )).text
+
+        result = (await self._client.get(f"{self._base_url}/projects/{project_id}/variables")).json()
+        branches = (await self._client.get(f"{self._base_url}/projects/{project_id}/repository/branches")).json()
+
+        variables = [{'key': 'branch', 'type': 'choice', 'value': [x['name'] for x in branches], 'protected': False}]
+        if 'message' not in result:
+            for var in result:
+                variables.append(
+                    {'key': var['key'], 'type': 'string', 'value': var['value'], 'protected': var['protected']})
+
+            if 'message' not in test:
+                for param in json.loads(test)['parameters']:
+                    if param['id'] != 'branch':
+                        variables.append(
+                            {'key': param['id'], 'type': param['type'], 'value': param['value'], 'protected': False})
+
+        return variables
 
 
 
