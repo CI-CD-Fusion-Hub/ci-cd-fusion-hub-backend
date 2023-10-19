@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, Request
 
-from schemas.applications_sch import CreateApplication, UpdateApplication
+from schemas.applications_sch import CreateApplication, UpdateApplication, ApplicationsResponse, ApplicationResponse
+from schemas.response_sch import Response
 from services.applications_srv import ApplicationService
 from utils.check_session import auth_required, admin_access_required
 
@@ -15,7 +16,8 @@ def create_application_service():
 @auth_required
 @admin_access_required
 async def get_all_applications(request: Request,
-                               application_service: ApplicationService = Depends(create_application_service)):
+                               application_service: ApplicationService = Depends(
+                                   create_application_service)) -> ApplicationsResponse:
     return await application_service.get_all_applications()
 
 
@@ -23,7 +25,8 @@ async def get_all_applications(request: Request,
 @auth_required
 @admin_access_required
 async def get_application(request: Request, application_id: int,
-                          application_service: ApplicationService = Depends(create_application_service)):
+                          application_service: ApplicationService = Depends(
+                              create_application_service)) -> ApplicationResponse:
     return await application_service.get_application_by_id(application_id)
 
 
@@ -31,7 +34,8 @@ async def get_application(request: Request, application_id: int,
 @auth_required
 @admin_access_required
 async def create_application(request: Request, app_data: CreateApplication,
-                             application_service: ApplicationService = Depends(create_application_service)):
+                             application_service: ApplicationService = Depends(
+                                 create_application_service)) -> ApplicationResponse:
     return await application_service.create_application(app_data)
 
 
@@ -39,7 +43,7 @@ async def create_application(request: Request, app_data: CreateApplication,
 @auth_required
 @admin_access_required
 async def verify_application(request: Request, app_data: CreateApplication,
-                             application_service: ApplicationService = Depends(create_application_service)):
+                             application_service: ApplicationService = Depends(create_application_service)) -> Response:
     return await application_service.verify_application(app_data)
 
 
@@ -47,7 +51,8 @@ async def verify_application(request: Request, app_data: CreateApplication,
 @auth_required
 @admin_access_required
 async def update_application(request: Request, application_id: int, app_data: UpdateApplication,
-                             application_service: ApplicationService = Depends(create_application_service)):
+                             application_service: ApplicationService = Depends(
+                                 create_application_service)) -> ApplicationResponse:
     return await application_service.update_application(application_id, app_data)
 
 
@@ -55,5 +60,5 @@ async def update_application(request: Request, application_id: int, app_data: Up
 @auth_required
 @admin_access_required
 async def delete_application(request: Request, application_id: int,
-                             application_service: ApplicationService = Depends(create_application_service)):
+                             application_service: ApplicationService = Depends(create_application_service)) -> Response:
     return await application_service.delete_application(application_id)

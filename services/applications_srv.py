@@ -1,9 +1,9 @@
 from daos.applications_dao import ApplicationDAO
 from exceptions.application_exception import ApplicationNotFoundException
 from schemas.applications_sch import ApplicationOut, CreateApplication, UpdateApplication
-from utils.enums import AppType
 from utils.clients.gitlab import GitlabClient
 from utils.clients.jenkins import JenkinsClient
+from utils.enums import AppType
 from utils.response import ok, error
 
 
@@ -26,7 +26,8 @@ class ApplicationService:
 
     async def create_application(self, app_data: CreateApplication):
         application = await self.app_dao.create(app_data.model_dump())
-        return ok(message="Successfully created application.", data=ApplicationOut.model_validate(application.as_dict()))
+        return ok(message="Successfully created application.",
+                  data=ApplicationOut.model_validate(application.as_dict()))
 
     async def delete_application(self, application_id: int):
         if not await self.app_dao.get_by_id(application_id):
@@ -45,7 +46,8 @@ class ApplicationService:
 
         application = await self.app_dao.update(application_id, data_to_update)
 
-        return ok(message="Successfully updated application.", data=ApplicationOut.model_validate(application.as_dict()))
+        return ok(message="Successfully updated application.",
+                  data=ApplicationOut.model_validate(application.as_dict()))
 
     @staticmethod
     async def verify_application(app_data: CreateApplication):
@@ -63,8 +65,3 @@ class ApplicationService:
             return ok(message="Application is accessible!")
         else:
             return error(message="Application is NOT accessible.")
-
-
-
-
-

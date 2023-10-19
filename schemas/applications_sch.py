@@ -1,7 +1,8 @@
-from typing import Optional
+from typing import Optional, List
 
 from pydantic import BaseModel, field_validator
 
+from schemas.response_sch import Response
 from utils.enums import AppType
 
 
@@ -17,8 +18,8 @@ class CreateApplication(BaseModel):
     def check_type(cls, value):
         if value in (app_type.value for app_type in AppType):
             return value
-        raise ValueError(
-            f"{value} is not a valid application type. Valid types are: {', '.join(app_type.value for app_type in AppType)}")
+        raise ValueError(f"{value} is not a valid application type. "
+                         f"Valid types are: {', '.join(app_type.value for app_type in AppType)}")
 
     class Config:
         json_schema_extra = {
@@ -61,3 +62,12 @@ class ApplicationOut(BaseModel):
     type: str
     status: str
     created_ts: str
+
+
+# Response models
+class ApplicationResponse(Response):
+    data: ApplicationOut
+
+
+class ApplicationsResponse(Response):
+    data: List[ApplicationOut]
