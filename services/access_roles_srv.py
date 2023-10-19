@@ -4,6 +4,7 @@ from fastapi import Request
 from daos.access_roles_dao import AccessRolesDAO
 from exceptions.access_roles_exception import AccessRoleNotFoundException
 from schemas.access_roles_sch import AccessRoleOut, CreateAccessRole, UpdateAccessRole, AccessRoleBaseOut
+from schemas.pipelines_sch import PipelineOut
 from utils.enums import SessionAttributes, AccessLevel
 from utils.response import ok
 
@@ -39,7 +40,8 @@ class AccessRolesService:
 
         role_data = AccessRoleOut.model_validate(access_role.as_dict())
         role_data.members = [member.user.as_dict() for member in access_role.users]
-        role_data.pipelines = [pipeline.pipeline.as_dict() for pipeline in access_role.pipelines]
+        role_data.pipelines = [PipelineOut.model_validate(pipeline.pipeline.as_dict())
+                               for pipeline in access_role.pipelines]
 
         return ok(message="Successfully provided access role.", data=role_data)
 

@@ -2,7 +2,8 @@ from typing import List
 
 from fastapi import APIRouter, Depends, Request
 
-from schemas.access_roles_sch import CreateAccessRole, UpdateAccessRole
+from schemas.access_roles_sch import CreateAccessRole, UpdateAccessRole, AccessRolesResponse, AccessRoleResponse
+from schemas.response_sch import Response
 from services.access_roles_srv import AccessRolesService
 from utils.check_session import auth_required, admin_access_required
 
@@ -16,14 +17,16 @@ def create_access_roles_service():
 @router.get("/access_roles", tags=["access_roles"])
 @auth_required
 async def get_all_access_roles(request: Request,
-                               access_roles_service: AccessRolesService = Depends(create_access_roles_service)):
+                               access_roles_service: AccessRolesService = Depends(
+                                   create_access_roles_service)) -> AccessRolesResponse:
     return await access_roles_service.get_all_access_roles(request)
 
 
 @router.get("/access_roles/{access_role_id}", tags=["access_roles"])
 @auth_required
 async def get_access_role(request: Request, access_role_id: int,
-                          access_roles_service: AccessRolesService = Depends(create_access_roles_service)):
+                          access_roles_service: AccessRolesService = Depends(
+                              create_access_roles_service)) -> AccessRoleResponse:
     return await access_roles_service.get_access_roles_by_id(request, access_role_id)
 
 
@@ -31,7 +34,8 @@ async def get_access_role(request: Request, access_role_id: int,
 @auth_required
 @admin_access_required
 async def create_role(request: Request, access_role_data: CreateAccessRole,
-                      access_roles_service: AccessRolesService = Depends(create_access_roles_service)):
+                      access_roles_service: AccessRolesService = Depends(
+                          create_access_roles_service)) -> AccessRoleResponse:
     return await access_roles_service.create_access_role(access_role_data)
 
 
@@ -39,7 +43,8 @@ async def create_role(request: Request, access_role_data: CreateAccessRole,
 @auth_required
 @admin_access_required
 async def update_role(request: Request, access_role_id: int, access_role_data: UpdateAccessRole,
-                      access_roles_service: AccessRolesService = Depends(create_access_roles_service)):
+                      access_roles_service: AccessRolesService = Depends(
+                          create_access_roles_service)) -> AccessRoleResponse:
     return await access_roles_service.update_access_role(access_role_id, access_role_data)
 
 
@@ -47,15 +52,16 @@ async def update_role(request: Request, access_role_id: int, access_role_data: U
 @auth_required
 @admin_access_required
 async def delete_role(request: Request, access_role_id: int,
-                      access_roles_service: AccessRolesService = Depends(create_access_roles_service)):
+                      access_roles_service: AccessRolesService = Depends(create_access_roles_service)) -> Response:
     return await access_roles_service.delete_access_role(access_role_id)
 
 
 @router.get("/access_roles/{access_role_id}/unassigned_users", tags=["access_roles"])
 @auth_required
 @admin_access_required
-async def get_unassigned_users_for_role(request: Request, access_role_id: int, access_roles_service: AccessRolesService = Depends(
-                                        create_access_roles_service)):
+async def get_unassigned_users_for_role(request: Request, access_role_id: int,
+                                        access_roles_service: AccessRolesService = Depends(
+                                            create_access_roles_service)) -> Response:
     return await access_roles_service.get_unassigned_users_for_role(access_role_id)
 
 
@@ -63,7 +69,8 @@ async def get_unassigned_users_for_role(request: Request, access_role_id: int, a
 @auth_required
 @admin_access_required
 async def add_member_to_access_role(request: Request, access_role_id: int, members: List[int],
-                                    access_roles_service: AccessRolesService = Depends(create_access_roles_service)):
+                                    access_roles_service: AccessRolesService = Depends(
+                                        create_access_roles_service)) -> Response:
     return await access_roles_service.add_members_to_role(access_role_id, members)
 
 
@@ -71,7 +78,8 @@ async def add_member_to_access_role(request: Request, access_role_id: int, membe
 @auth_required
 @admin_access_required
 async def delete_members_from_role(request: Request, access_role_id: int, user_id: int,
-                                   access_roles_service: AccessRolesService = Depends(create_access_roles_service)):
+                                   access_roles_service: AccessRolesService = Depends(
+                                       create_access_roles_service)) -> Response:
     return await access_roles_service.delete_members_from_role(access_role_id, user_id)
 
 
@@ -80,7 +88,7 @@ async def delete_members_from_role(request: Request, access_role_id: int, user_i
 @admin_access_required
 async def get_unassigned_pipelines_for_role(request: Request, access_role_id: int,
                                             access_roles_service: AccessRolesService =
-                                            Depends(create_access_roles_service)):
+                                            Depends(create_access_roles_service)) -> Response:
     return await access_roles_service.get_unassigned_pipelines_for_role(access_role_id)
 
 
@@ -88,7 +96,8 @@ async def get_unassigned_pipelines_for_role(request: Request, access_role_id: in
 @auth_required
 @admin_access_required
 async def add_pipeline_to_access_role(request: Request, access_role_id: int, pipelines: List[int],
-                                      access_roles_service: AccessRolesService = Depends(create_access_roles_service)):
+                                      access_roles_service: AccessRolesService = Depends(
+                                          create_access_roles_service)) -> Response:
     return await access_roles_service.add_pipeline_to_role(access_role_id, pipelines)
 
 
@@ -96,5 +105,6 @@ async def add_pipeline_to_access_role(request: Request, access_role_id: int, pip
 @auth_required
 @admin_access_required
 async def delete_pipeline_from_role(request: Request, access_role_id: int, pipeline_id: int,
-                                    access_roles_service: AccessRolesService = Depends(create_access_roles_service)):
+                                    access_roles_service: AccessRolesService = Depends(
+                                        create_access_roles_service)) -> Response:
     return await access_roles_service.delete_pipeline_from_role(access_role_id, pipeline_id)
