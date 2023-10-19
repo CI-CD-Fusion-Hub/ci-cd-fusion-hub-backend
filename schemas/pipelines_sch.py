@@ -1,4 +1,8 @@
+from typing import List
+
 from pydantic import BaseModel
+
+from schemas.response_sch import Response
 
 
 class PipelineApplicationOut(BaseModel):
@@ -14,6 +18,15 @@ class PipelineOut(BaseModel):
     id: int
     name: str
     application: PipelineApplicationOut
+
+
+# Response models
+class PipelineResponse(Response):
+    data: PipelineOut
+
+
+class PipelinesResponse(Response):
+    data: List[PipelineOut]
 
 
 class GitlabStartPipelineParams(BaseModel):
