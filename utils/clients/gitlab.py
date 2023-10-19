@@ -80,6 +80,7 @@ class GitlabClient(BaseClient):
                         pipeline_result[index]["duration"] += stage["duration"]
                     else:
                         pipeline_result[index]["duration"] = 0
+
                     pipeline_result[index]["commit_msg"] = stage["commit"]["title"]
                     pipeline_result[index]['stages'].append(
                         {"id": stage['id'], "name": stage['stage'], "status": stage['status']})
@@ -89,12 +90,32 @@ class GitlabClient(BaseClient):
         return pipeline_result
 
     async def get_project_pipeline_info(self, project_id: str, pipeline_id: int):
-        result = (await self._client.get(f"{self._base_url}/projects/{project_id}/pipelines/{pipeline_id}"))
+        stages = (await self._client.get(f"{self._base_url}/projects/{project_id}/pipelines/{pipeline_id}/jobs")).json()
 
-        if result.status_code != 200:
+        if not stages:
             return []
 
-        return result.json()
+        first_stage = stages[0]
+
+        pipeline_json = {
+            "id": first_stage['pipeline']['id'],
+            "status": first_stage['pipeline']['status'],
+            "commit_msg": first_stage["commit"]["title"],
+            "duration": 0,
+            "stages": [],
+            "created_at": int(datetime.fromisoformat(first_stage['pipeline']['created_at']).timestamp())
+        }
+
+        for stage in stages:
+            if stage["duration"]:
+                pipeline_json["duration"] += stage["duration"]
+
+            pipeline_json['stages'].append(
+                {"id": stage['id'], "name": stage['stage'], "status": stage['status']})
+
+        pipeline_json["duration"] = int(pipeline_json["duration"])
+
+        return pipeline_json
 
     async def get_project_pipeline_jobs(self, project_id: str, pipeline_id: int):
         result = (await self._client.get(f"{self._base_url}/projects/{project_id}/pipelines/{pipeline_id}/jobs"))
@@ -168,7 +189,3 @@ class GitlabClient(BaseClient):
                             {'key': param['id'], 'type': param['type'], 'value': param['value'], 'protected': False})
 
         return variables
-
-
-
-

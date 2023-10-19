@@ -16,7 +16,7 @@ class AccessRolesService:
         user_access_level = request.session.get(SessionAttributes.USER_ACCESS_LEVEL.value)
         user_roles = request.session.get(SessionAttributes.USER_ROLES.value)
 
-        if user_access_level != AccessLevel.ADMIN.value and user_roles:
+        if user_access_level != AccessLevel.ADMIN.value:
             access_roles = await self.access_roles_dao.get_access_roles_by_ids(user_roles)
         else:
             access_roles = await self.access_roles_dao.get_all()
@@ -30,7 +30,7 @@ class AccessRolesService:
         user_access_level = request.session.get(SessionAttributes.USER_ACCESS_LEVEL.value)
         user_roles = request.session.get(SessionAttributes.USER_ROLES.value)
 
-        if user_access_level != AccessLevel.ADMIN.value and user_roles and access_role_id not in user_roles:
+        if user_access_level != AccessLevel.ADMIN.value and access_role_id not in user_roles:
             raise AccessRoleNotFoundException(f"Access role with ID {access_role_id} does not exist.")
 
         access_role = await self.access_roles_dao.get_detailed_role_info(access_role_id)

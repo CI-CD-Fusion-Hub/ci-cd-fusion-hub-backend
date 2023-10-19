@@ -51,23 +51,3 @@ def admin_access_required(function_to_protect):
         return unauthorized()
 
     return wrapper
-
-
-# Optimize this
-async def get_user_pipelines(request: Request):
-    email = request.session.get(SessionAttributes.USER_NAME.value)
-
-    if not email:
-        return unauthorized()
-
-    user_dao = UserDAO()
-    user = await user_dao.get_detailed_user_info_by_email(email)
-    if not user:
-        return unauthorized()
-
-    pipelines = set()
-    for role_member in user.roles:
-        for pipeline in role_member.role.pipelines:
-            pipelines.add(pipeline.pipeline.id)
-
-    return list(pipelines)
