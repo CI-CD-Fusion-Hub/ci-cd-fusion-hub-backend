@@ -1,5 +1,8 @@
 import asyncio
 import base64
+import re
+from typing import List
+
 import httpx
 
 from fastapi import status
@@ -59,6 +62,19 @@ class JenkinsClient(BaseClient):
             return []
         except ValueError:
             return []
+
+    async def get_pipelines_list_by_pattern(self, regex_pattern: str) -> List:
+        pipelines = await self.get_pipelines_list()
+
+        if not pipelines:
+            return []
+
+        filtered_pipelines = []
+        for pipeline in pipelines:
+            if re.search(regex_pattern, pipeline['name']):
+                filtered_pipelines.append(pipeline)
+
+        return filtered_pipelines
 
     async def get_pipeline_builds(self, pipeline_name: str):
         """

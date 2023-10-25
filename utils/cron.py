@@ -5,44 +5,42 @@ from typing import List, Dict, Set
 
 from daos.applications_dao import ApplicationDAO
 from daos.pipelines_dao import PipelineDAO
-from utils.enums import AppType
-from utils.clients.gitlab import GitlabClient
-from utils.clients.jenkins import JenkinsClient
+from schemas.applications_sch import ApplicationOut
+from utils.clients.client_manager import ClientManager
 from utils.logger import Logger
 
 LOGGER = Logger().start_logger()
 
 
 class Cron:
+    def __init__(self, pipeline_dao=None, application_dao=None):
+        self.pipeline_dao = pipeline_dao or PipelineDAO()
+        self.application_dao = application_dao or ApplicationDAO()
 
-    @staticmethod
-    async def _fetch_pipelines_from_applications(applications: List) -> List[Dict]:
+    @classmethod
+    async def _fetch_pipelines_from_applications(cls, applications: List) -> List[Dict]:
         fetched_pipelines = []
         for application in applications:
-            if application.type == AppType.JENKINS.value:
-                fetched_pipelines += await Cron._fetch_from_jenkins(application)
-            elif application.type == AppType.GITLAB.value:
-                fetched_pipelines += await Cron._fetch_from_gitlab(application)
+            LOGGER.debug(f"Going to fetch application of type: {application.type}")
+
+            application_out = ApplicationOut.model_validate(application.as_dict())
+            client = await ClientManager().create_client(application_out)
+
+            if application.regex_pattern:
+                pipelines = await client.get_pipelines_list_by_pattern(application.regex_pattern)
+            else:
+                pipelines = await client.get_pipelines_list()
+
+            fetched_pipelines.extend(pipelines)
+
+            LOGGER.debug(f"Fetched {len(pipelines)} pipelines from {application.type} for application ID: "
+                         f"{application.name}")
+
         return fetched_pipelines
 
-    @staticmethod
-    async def _fetch_from_jenkins(application) -> List[Dict]:
-        LOGGER.debug(f"Going to fetch application of type: {application.type}")
-        jenkins_client = await JenkinsClient.from_application_id(application.id)
-        jenkins_pipelines = await jenkins_client.get_pipelines_list()
-        LOGGER.debug(f"Fetched {len(jenkins_pipelines)} pipelines from Jenkins for application ID: {application.name}")
-        return jenkins_pipelines
-
-    @staticmethod
-    async def _fetch_from_gitlab(application) -> List[Dict]:
-        LOGGER.debug(f"Going to fetch application of type: {application.type}")
-        gitlab_client = await GitlabClient.from_application_id(application.id)
-        gitlab_pipelines = await gitlab_client.get_projects_list()
-        LOGGER.debug(f"Fetched {len(gitlab_pipelines)} pipelines from GitLab for application ID: {application.name}")
-        return gitlab_pipelines
-
-    @staticmethod
-    async def _identify_new_pipelines(fetched_pipelines: List[Dict], existing_pipeline_names: Set[str]) -> List[Dict]:
+    @classmethod
+    async def _identify_new_pipelines(cls, fetched_pipelines: List[Dict],
+                                      existing_pipeline_names: Set[str]) -> List[Dict]:
         new_pipelines = []
         unique_names = set()
         for fetched_pipeline in fetched_pipelines:
@@ -55,19 +53,18 @@ class Cron:
                 LOGGER.debug(f"Identified new pipeline: {unique_name}")
         return new_pipelines
 
-    @staticmethod
-    async def sync_pipelines(interval: int):
+    async def sync_pipelines(self, interval: int):
         while True:
             LOGGER.debug(f"Pipelines sync has started in a `Thread` with ID - {threading.get_ident()}")
             try:
                 pipeline_dao = PipelineDAO()
                 LOGGER.debug("Fetching all applications and pipelines from the database.")
-                applications = await ApplicationDAO().get_all()
-                pipelines = await pipeline_dao.get_all()
+                applications = await self.application_dao.get_all()
+                pipelines = await self.pipeline_dao.get_all()
                 existing_pipeline_names = {f"{pipeline.name}-{pipeline.application_id}" for pipeline in pipelines}
 
-                fetched_pipelines = await Cron._fetch_pipelines_from_applications(applications)
-                new_pipelines = await Cron._identify_new_pipelines(fetched_pipelines, existing_pipeline_names)
+                fetched_pipelines = await self._fetch_pipelines_from_applications(applications)
+                new_pipelines = await self._identify_new_pipelines(fetched_pipelines, existing_pipeline_names)
 
                 if new_pipelines:
                     await pipeline_dao.create_bulk(new_pipelines)

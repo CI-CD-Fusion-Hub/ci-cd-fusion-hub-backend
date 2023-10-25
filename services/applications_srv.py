@@ -1,6 +1,7 @@
 from daos.applications_dao import ApplicationDAO
 from exceptions.application_exception import ApplicationNotFoundException
 from schemas.applications_sch import ApplicationOut, CreateApplication, UpdateApplication
+from utils.clients.github import GithubClient
 from utils.clients.gitlab import GitlabClient
 from utils.clients.jenkins import JenkinsClient
 from utils.enums import AppType
@@ -55,6 +56,8 @@ class ApplicationService:
 
         if app_data.type == AppType.GITLAB.value:
             client = GitlabClient(base_url=app_data.base_url, token=app_data.auth_pass)
+        if app_data.type == AppType.GITHUB.value:
+            client = GithubClient(base_url=app_data.base_url, token=app_data.auth_pass)
         elif app_data.type == AppType.JENKINS.value:
             client = JenkinsClient(base_url=app_data.base_url, user=app_data.auth_user, token=app_data.auth_pass)
 

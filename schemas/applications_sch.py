@@ -1,3 +1,4 @@
+import re
 from typing import Optional, List
 
 from pydantic import BaseModel, field_validator
@@ -13,13 +14,22 @@ class CreateApplication(BaseModel):
     base_url: str
     type: str
     status: str
+    regex_pattern: Optional[str] = None
 
     @field_validator("type", check_fields=True)
-    def check_type(cls, value):
+    def validate_type(cls, value):
         if value in (app_type.value for app_type in AppType):
             return value
         raise ValueError(f"{value} is not a valid application type. "
                          f"Valid types are: {', '.join(app_type.value for app_type in AppType)}")
+
+    @field_validator("regex_pattern", check_fields=True)
+    def validate_regex_pattern(cls, value):
+        try:
+            re.compile(value)
+            return value
+        except re.error:
+            raise ValueError(f"'{value}' is not a valid regular expression pattern.")
 
     class Config:
         json_schema_extra = {

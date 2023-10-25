@@ -121,6 +121,7 @@ class Applications(Base):
     auth_pass = Column(String)
     base_url = Column(String)
     type = Column(String)
+    regex_pattern = Column(String)
     status = Column(String)
     created_ts = Column(TIMESTAMP, default=func.now())
 
@@ -134,6 +135,7 @@ class Applications(Base):
             'auth_pass': self.auth_pass,
             'base_url': self.base_url,
             'type': self.type,
+            'regex_pattern': self.regex_pattern,
             'status': self.status,
             'created_ts': self.created_ts.isoformat() if self.created_ts else None
         }

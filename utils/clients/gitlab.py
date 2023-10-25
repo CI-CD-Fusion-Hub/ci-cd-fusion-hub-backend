@@ -1,5 +1,7 @@
 import re
 import json
+from typing import List
+
 import httpx
 
 from datetime import datetime
@@ -35,7 +37,7 @@ class GitlabClient(BaseClient):
         ansi_escape = re.compile(r'(\x9B|\x1B\[)[0-?]*[ -\/]*[@-~]')
         return ansi_escape.sub('', line)
 
-    async def get_projects_list(self):
+    async def get_pipelines_list(self):
         try:
             result = await self._client.get(
                 f"{self._base_url}/projects?per_page=100&page=1&order_by=id&sort=asc")
@@ -74,20 +76,41 @@ class GitlabClient(BaseClient):
 
         result = (await self._client.get(f"{self._base_url}/projects/{project_id}/jobs")).json()
         for index, pipeline in enumerate(pipeline_result):
-            for stage in result:
-                if stage['pipeline']['id'] == int(pipeline["id"]):
-                    if stage["duration"]:
-                        pipeline_result[index]["duration"] += stage["duration"]
-                    else:
-                        pipeline_result[index]["duration"] = 0
+            # store the latest job for each stage
+            stage_latest_jobs = {}
+            for job in result:
+                if job['pipeline']['id'] == int(pipeline["id"]):
+                    stage_name = job['stage']
+                    # check if this job is more recent than the stored job for the same stage
+                    if stage_name not in stage_latest_jobs or job['created_at'] > stage_latest_jobs[stage_name][
+                        'created_at']:
+                        stage_latest_jobs[stage_name] = job
 
-                    pipeline_result[index]["commit_msg"] = stage["commit"]["title"]
-                    pipeline_result[index]['stages'].append(
-                        {"id": stage['id'], "name": stage['stage'], "status": stage['status']})
+            for stage_name, job in stage_latest_jobs.items():
+                pipeline_result[index]["duration"] += job.get("duration", 0)
+                pipeline_result[index]["commit_msg"] = job["commit"]["title"]
+                pipeline_result[index]['stages'].append({
+                    "id": job['id'],
+                    "name": stage_name,
+                    "status": job['status']
+                })
 
             pipeline_result[index]["duration"] = int(pipeline_result[index]["duration"])
 
         return pipeline_result
+
+    async def get_pipelines_list_by_pattern(self, regex_pattern: str) -> List:
+        pipelines = await self.get_pipelines_list()
+
+        if not pipelines:
+            return []
+
+        filtered_pipelines = []
+        for pipeline in pipelines:
+            if re.search(regex_pattern, pipeline["name"]):
+                filtered_pipelines.append(pipeline)
+
+        return filtered_pipelines
 
     async def get_project_pipeline_info(self, project_id: str, pipeline_id: int):
         stages = (await self._client.get(f"{self._base_url}/projects/{project_id}/pipelines/{pipeline_id}/jobs")).json()
