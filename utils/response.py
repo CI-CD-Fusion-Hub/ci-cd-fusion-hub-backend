@@ -28,10 +28,10 @@ def unauthorized():
 
 def forbidden():
     LOGGER.warning("Attempt to access resource without authorization")
-    """HTTP Response 401"""
+    """HTTP Response 403"""
     return custom_response({
         "status": "error",
-        "message": "Unauthorized",
+        "message": "Forbidden",
         "data": None
     }, Status.HTTP_403_FORBIDDEN)
 

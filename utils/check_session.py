@@ -5,7 +5,7 @@ from config.config import Settings
 from daos.users_dao import UserDAO
 from utils.enums import AccessLevel, UserStatus, SessionAttributes
 from utils.logger import Logger
-from utils.response import unauthorized
+from utils.response import unauthorized, forbidden
 
 LOGGER = Logger().start_logger()
 config = Settings()
@@ -33,6 +33,7 @@ def auth_required(function_to_protect):
             for pipeline in role_member.role.pipelines:
                 pipelines.add(pipeline.pipeline.id)
 
+        request.session[SessionAttributes.USER_INFO.value] = user.as_dict()
         request.session[SessionAttributes.USER_ACCESS_LEVEL.value] = user.access_level
         request.session[SessionAttributes.USER_ID.value] = user.id
         request.session[SessionAttributes.USER_ROLES.value] = list(roles)
@@ -48,6 +49,6 @@ def admin_access_required(function_to_protect):
         if request.session.get(SessionAttributes.USER_ACCESS_LEVEL.value) == AccessLevel.ADMIN.value:
             return await function_to_protect(request, *args, **kwargs)
 
-        return unauthorized()
+        return forbidden()
 
     return wrapper

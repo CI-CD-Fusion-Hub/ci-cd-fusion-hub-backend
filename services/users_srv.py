@@ -101,3 +101,11 @@ class UserService:
     async def logout(cls, request):
         request.session.clear()
         return ok(message="Successful logout.")
+
+    @classmethod
+    async def get_user_info_from_request(cls, request):
+        return ok(
+            message="Successfully provided user details.",
+            data=request.session.get(SessionAttributes.USER_INFO.value)
+        )
+

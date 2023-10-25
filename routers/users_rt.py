@@ -26,6 +26,13 @@ async def get_user_by_id(request: Request, user_id: int,
     return await user_service.get_user_by_id(request, user_id)
 
 
+@router.get("/user", tags=["users"])
+@auth_required
+async def get_user_by_id(request: Request,
+                         user_service: UserService = Depends(create_user_service)) -> UserResponse:
+    return await user_service.get_user_info_from_request(request)
+
+
 @router.post("/users", tags=["users"])
 @auth_required
 @admin_access_required
