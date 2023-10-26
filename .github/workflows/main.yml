@@ -11,7 +11,7 @@ on:
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
   # This workflow contains a single job called "build"
-  build:
+  build-deploy:
     # The type of runner that the job will run on
     runs-on: ubuntu-latest
 
@@ -28,5 +28,5 @@ jobs:
           docker login -u $DOCKER_USER -p $DOCKER_PASSWORD
       - name: Build Docker image
         run: docker build -t ci-cd-fusion-hub/backend:$(cat ci-cd/VERSION) -f ci-cd/Dockerfile .
-      - name: print docker images
-        run: docker images
+      - name: Deploy to Docker Hub
+        run: docker push ci-cd-fusion-hub/backend:$(cat ci-cd/VERSION)
