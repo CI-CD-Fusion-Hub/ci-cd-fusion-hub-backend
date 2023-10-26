@@ -27,6 +27,6 @@ jobs:
         run: |
           docker login -u $DOCKER_USER -p $DOCKER_PASSWORD
       - name: Build Docker image
-        run: docker build -t ci-cd-fusion-hub/backend:$(cat ci-cd/VERSION) -f ci-cd/Dockerfile .
+        run: docker build -t cicdfusionhub/backend:$(cat ci-cd/VERSION) -f ci-cd/Dockerfile .
       - name: Deploy to Docker Hub
-        run: docker push ci-cd-fusion-hub/backend:$(cat ci-cd/VERSION)
+        run: docker push cicdfusionhub/backend:$(cat ci-cd/VERSION)
