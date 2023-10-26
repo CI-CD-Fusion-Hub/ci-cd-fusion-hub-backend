@@ -37,7 +37,7 @@ def forbidden():
 
 
 def error(status="error", message="Oops!!! Something went wrong. Contact your support for more information.",
-          data=None):
+          data=None, status_code=Status.HTTP_500_INTERNAL_SERVER_ERROR):
     """HTTP Response 500"""
     if data:
         LOGGER.error(f"{message} Following exception occurred: {str(data)}")
@@ -48,7 +48,7 @@ def error(status="error", message="Oops!!! Something went wrong. Contact your su
         "status": status,
         "message": message,
         "data": data
-    }, Status.HTTP_200_OK)
+    }, status_code)
 
 
 def custom_response(resp, status_code):

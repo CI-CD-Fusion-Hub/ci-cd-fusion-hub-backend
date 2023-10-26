@@ -72,6 +72,7 @@ class ApplicationOut(BaseModel):
     type: str
     status: str
     created_ts: str
+    regex_pattern: str
 
 
 # Response models

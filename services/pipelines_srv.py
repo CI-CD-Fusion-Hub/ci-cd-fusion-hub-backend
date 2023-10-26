@@ -81,6 +81,7 @@ class PipelinesService:
 
         pipeline, client = await self._get_pipeline_and_client(pipeline_id)
         data = await client.get_project_pipeline_info(pipeline.project_id, build_id)
+        data['name'] = pipeline.name
         return ok(message="Successfully provided gitlab pipeline build.", data=data)
 
     async def get_gitlab_pipeline_build_jobs(self, request: Request, pipeline_id: int, build_id: int):

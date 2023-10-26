@@ -135,7 +135,7 @@ class Applications(Base):
             'auth_pass': self.auth_pass,
             'base_url': self.base_url,
             'type': self.type,
-            'regex_pattern': self.regex_pattern,
+            'regex_pattern': self.regex_pattern if self.regex_pattern else "",
             'status': self.status,
             'created_ts': self.created_ts.isoformat() if self.created_ts else None
         }
