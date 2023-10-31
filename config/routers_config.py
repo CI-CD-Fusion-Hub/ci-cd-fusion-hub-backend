@@ -7,7 +7,10 @@ from routers import (
     applications_rt,
     access_roles_rt,
     pipelines_rt,
-    auth_rt
+    auth_rt,
+    github_pipelines_rt,
+    gitlab_pipelines_rt,
+    jenkins_pipelines_rt
 )
 
 config = Settings().app
@@ -19,4 +22,7 @@ def configure(app: FastAPI):
     app.include_router(status_rt.router, prefix=config['root_path'])
     app.include_router(applications_rt.router, prefix=config['root_path'])
     app.include_router(access_roles_rt.router, prefix=config['root_path'])
+    app.include_router(gitlab_pipelines_rt.router, prefix=config['root_path'])
+    app.include_router(github_pipelines_rt.router, prefix=config['root_path'])
+    app.include_router(jenkins_pipelines_rt.router, prefix=config['root_path'])
     app.include_router(pipelines_rt.router, prefix=config['root_path'])

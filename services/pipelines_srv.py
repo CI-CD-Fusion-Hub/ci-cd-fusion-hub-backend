@@ -128,6 +128,27 @@ class PipelinesService:
         params = await client.get_pipeline_params(pipeline.project_id)
         return ok(message="Successfully provided gitlab pipeline params.", data=params)
 
+    async def get_all_github_pipelines(self, request: Request):
+        user_access_level = request.session.get(SessionAttributes.USER_ACCESS_LEVEL.value)
+        user_pipelines = request.session.get(SessionAttributes.USER_PIPELINES.value)
+
+        if user_access_level != AccessLevel.ADMIN.value:
+            pipelines = await self.pipelines_dao.get_by_application_type_and_ids(AppType.GITHUB.value, user_pipelines)
+        else:
+            pipelines = await self.pipelines_dao.get_by_application_type(AppType.GITHUB.value)
+
+        return ok(
+            message="Successfully provided all github pipelines.",
+            data=[PipelineOut.model_validate(pipeline.as_dict()) for pipeline in pipelines]
+        )
+
+    async def get_github_pipeline_builds(self, request: Request, pipeline_id: int):
+        await self._validate_user_access(request, pipeline_id)
+
+        pipeline, client = await self._get_pipeline_and_client(pipeline_id)
+        data = await client.get_project_pipelines_list(pipeline.project_id, pipeline.name)
+        return ok(message="Successfully provided gitlab pipeline builds.", data=data)
+
     async def get_all_jenkins_pipelines(self, request: Request):
         user_access_level = request.session.get(SessionAttributes.USER_ACCESS_LEVEL.value)
         user_pipelines = request.session.get(SessionAttributes.USER_PIPELINES.value)

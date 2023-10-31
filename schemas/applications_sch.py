@@ -50,6 +50,15 @@ class UpdateApplication(BaseModel):
     auth_pass: Optional[str] = None
     base_url: Optional[str] = None
     status: Optional[str] = None
+    regex_pattern: Optional[str] = None
+
+    @field_validator("regex_pattern", check_fields=True)
+    def validate_regex_pattern(cls, value):
+        try:
+            re.compile(value)
+            return value
+        except re.error:
+            raise ValueError(f"'{value}' is not a valid regular expression pattern.")
 
     class Config:
         json_schema_extra = {

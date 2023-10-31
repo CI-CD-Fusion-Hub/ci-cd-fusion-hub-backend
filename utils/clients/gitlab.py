@@ -98,18 +98,19 @@ class GitlabClient(BaseClient):
                             stage_latest_jobs[stage_name] = job
 
                 for stage_name, job in stage_latest_jobs.items():
-                    if not job['duration']:
-                        pipeline_result[index]["duration"] = 0
-                    else:
-                        pipeline_result[index]["duration"] += job["duration"]
+                    job["duration"] = 0 if not job['duration'] else int(job["duration"])
 
+                    pipeline_result[index]["duration"] += job["duration"]
                     pipeline_result[index]["commit_msg"] = job["commit"]["title"]
                     pipeline_result[index]['stages'].append({
                         "id": job['id'],
                         "name": stage_name,
-                        "status": job['status']
+                        "status": job['status'],
+                        "started_at": job['started_at'],
+                        "duration": int(job["duration"])
                     })
 
+                pipeline_result[index]['stages'] = pipeline_result[index]['stages'][::-1]
                 pipeline_result[index]["duration"] = int(pipeline_result[index]["duration"])
 
             return pipeline_result
@@ -157,11 +158,20 @@ class GitlabClient(BaseClient):
 
             for stage in stages:
                 if stage["duration"]:
-                    pipeline_json["duration"] += stage["duration"]
+                    pipeline_json["duration"] += int(stage["duration"])
+                else:
+                    stage["duration"] = 0
 
                 pipeline_json['stages'].append(
-                    {"id": stage['id'], "name": stage['stage'], "status": stage['status']})
+                    {
+                        "id": stage['id'],
+                        "name": stage['stage'],
+                        "status": stage['status'],
+                        "duration": int(stage["duration"]),
+                        "started_at": stage['started_at'] if stage['started_at'] else None
+                    })
 
+            pipeline_json['stages'] = pipeline_json['stages'][::-1]
             pipeline_json["duration"] = int(pipeline_json["duration"])
 
             return pipeline_json

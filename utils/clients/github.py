@@ -54,8 +54,15 @@ class GithubClient(BaseClient):
 
             updated_pipelines = []
             for pipeline in pipelines:
-                updated_pipelines.append({'id': pipeline['id'], 'name': pipeline['name'], 'app': self._app_id,
-                                          'type': AppType.GITLAB.value})
+                url = f"{self._base_url}/repositories/{pipeline['id']}/actions/workflows"
+
+                response = await self._client.get(url)
+                response.raise_for_status()
+
+                workflows = response.json()["workflows"]
+                for workflow in workflows:
+                    updated_pipelines.append({'id': pipeline["id"], 'name': workflow["name"], 'app': self._app_id,
+                                              'type': AppType.GITHUB.value})
 
             return updated_pipelines
         except httpx.RequestError:
@@ -78,6 +85,33 @@ class GithubClient(BaseClient):
                 filtered_pipelines.append(pipeline)
 
         return filtered_pipelines
+
+    async def get_project_pipelines_list(self, project_id: str, workflow_name: str) -> List:
+        """Get all pipelines for specific project."""
+        url = f"{self._base_url}/repositories/{project_id}/actions/workflows"
+
+        workflow_response = await self._client.get(url)
+        workflow_response.raise_for_status()
+
+        workflows = workflow_response.json()["workflows"]
+
+        workflow_id = 0
+        for workflow in workflows:
+            if workflow['name'] == workflow_name:
+                workflow_id = workflow['id']
+                break
+
+        runs_url = f"{url}/{workflow_id}/runs"
+        response = await self._client.get(runs_url)
+        response.raise_for_status()
+
+        # Update response
+        workflows_resp = []
+        runs = response.json()["workflow_runs"]
+        for run in runs:
+            workflows_resp.append(run)
+
+        return workflows_resp
 
 
 
