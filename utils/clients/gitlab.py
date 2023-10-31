@@ -300,6 +300,7 @@ class GitlabClient(BaseClient):
                                                                        for x in branches], 'protected': False}]
             if 'message' not in result:
                 for var in result:
+                    print(var)
                     variables.append(
                         {'key': var['key'], 'type': 'string', 'value': var['value'], 'protected': var['protected']})
 
@@ -311,6 +312,8 @@ class GitlabClient(BaseClient):
                                     'key': param['id'],
                                     'type': param['type'],
                                     'value': param['value'],
+                                    'description': param.get('description'),
+                                    'depends_on': param.get('depends_on'),
                                     'protected': False
                                 }
                             )
