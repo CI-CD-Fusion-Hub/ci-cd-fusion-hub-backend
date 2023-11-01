@@ -4,7 +4,6 @@ import re
 from typing import List
 
 import httpx
-
 from fastapi import status
 
 from daos.applications_dao import ApplicationDAO
@@ -93,7 +92,7 @@ class JenkinsClient(BaseClient):
                 "id": build['number'],
                 "name": f"{result['name']} - {build['number']}",
                 "status": 'running' if build['result'] is None else str(build['result']).lower(),
-                "created_at": build['timestamp'],
+                "created_at": int(build['timestamp'] / 1000),
                 "duration": int(build['duration'] / 1000)
             }
 
@@ -109,7 +108,7 @@ class JenkinsClient(BaseClient):
         :param job_id: ID of the specific build of the Jenkins job.
         :return: Dictionary containing build details and console log.
         """
-        build_url = f"{self._base_url}/job/{pipeline_name}/{job_id}/api/json?tree=duration,fullDisplayName,result&pretty"
+        build_url = f"{self._base_url}/job/{pipeline_name}/{job_id}/api/json?tree=duration,fullDisplayName,result,timestamp&pretty"
         console_log_url = f"{self._base_url}/job/{pipeline_name}/{job_id}/consoleText"
 
         build_response, console_log_response = await asyncio.gather(
@@ -126,6 +125,7 @@ class JenkinsClient(BaseClient):
         build_info = {
             "name": build['fullDisplayName'],
             "duration": int(build['duration'] / 1000),
+            "created_at": int(build['timestamp'] / 1000),
             "status": 'running' if build['result'] is None else str(build['result']).lower(),
             "log": console_log
         }
@@ -141,18 +141,22 @@ class JenkinsClient(BaseClient):
             raise ValueError("Failed to start Jenkins job.")
 
     async def get_pipeline_params(self, pipeline_name: str):
-        result = (await self._client.get(f"{self._base_url}/job/{pipeline_name}/api/json?tree=property[*[*[*]]]")).json()
+        result = (
+            await self._client.get(f"{self._base_url}/job/{pipeline_name}/api/json?tree=property[*[*[*]]]")).json()
 
         variables = []
         for var in result['property']:
             if var['_class'] == 'hudson.model.ParametersDefinitionProperty':
                 for variable in var['parameterDefinitions']:
                     if variable['type'] == 'ChoiceParameterDefinition':
-                        variables.append({'key': variable['name'], 'type': str(variable['type']).lower(), 'value': variable['choices'], 'protected': False})
+                        variables.append({'key': variable['name'], 'type': str(variable['type']).lower(),
+                                          'value': variable['choices'], 'protected': False})
                     elif variable['type'] == 'PasswordParameterDefinition':
-                        variables.append({'key': variable['name'], 'type': str(variable['type']).lower(), 'value': '', 'protected': True})
+                        variables.append({'key': variable['name'], 'type': str(variable['type']).lower(), 'value': '',
+                                          'protected': True})
                     else:
-                        variables.append({'key': variable['name'], 'type': str(variable['type']).lower(), 'value': variable['defaultParameterValue']['value'], 'protected': False})
+                        variables.append({'key': variable['name'], 'type': str(variable['type']).lower(),
+                                          'value': variable['defaultParameterValue']['value'], 'protected': False})
 
         return variables
 
@@ -173,9 +177,3 @@ class JenkinsClient(BaseClient):
             raise ValueError(f"Jenkins job with ID {job_id} in pipeline {pipeline_name} not found.")
         else:
             raise ValueError(f"Failed to stop Jenkins job with ID {job_id} in pipeline {pipeline_name}.")
-
-
-
-
-
-
