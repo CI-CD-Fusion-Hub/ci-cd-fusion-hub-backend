@@ -1,4 +1,7 @@
+import re
+
 from daos.applications_dao import ApplicationDAO
+from daos.pipelines_dao import PipelineDAO
 from exceptions.application_exception import ApplicationNotFoundException
 from schemas.applications_sch import ApplicationOut, CreateApplication, UpdateApplication
 from utils.clients.github import GithubClient
@@ -11,6 +14,7 @@ from utils.response import ok, error
 class ApplicationService:
     def __init__(self):
         self.app_dao = ApplicationDAO()
+        self.pipelines_dao = PipelineDAO()
 
     async def get_all_applications(self):
         applications = await self.app_dao.get_all()
@@ -46,6 +50,10 @@ class ApplicationService:
         data_to_update = {k: v for k, v in data_to_update.items() if v is not None}
 
         application = await self.app_dao.update(application_id, data_to_update)
+
+        pipelines = await self.pipelines_dao.get_by_application_id(application_id)
+        pipeline_ids = [pipeline.id for pipeline in pipelines if not re.search(app_data.regex_pattern, pipeline.name)]
+        await self.pipelines_dao.delete_multiple(pipeline_ids)
 
         return ok(message="Successfully updated application.",
                   data=ApplicationOut.model_validate(application.as_dict()))

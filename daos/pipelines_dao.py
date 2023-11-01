@@ -27,6 +27,14 @@ class PipelineDAO:
             )
             return result.scalars().all()
 
+    async def get_by_application_id(self, application_id: int) -> List[model.Pipelines]:
+        """Fetch all pipelines by application id."""
+        async with self.db:
+            result = await self.db.execute(
+                select(model.Pipelines).where(model.Pipelines.application_id == application_id)
+            )
+            return result.scalars().all()
+
     async def get_by_application_type_and_ids(self, app_type: str, pipeline_ids: List[int]) -> List[model.Pipelines]:
         """Fetch all pipelines for a specific application type and ids."""
         async with self.db:
@@ -84,4 +92,10 @@ class PipelineDAO:
         """Delete a pipeline."""
         async with self.db:
             await self.db.execute(delete(model.Pipelines).where(model.Pipelines.id == pipeline_id))
+            await self.db.commit()
+
+    async def delete_multiple(self, pipeline_ids: List[int]):
+        """Delete multiple pipelines by their IDs."""
+        async with self.db:
+            await self.db.execute(delete(model.Pipelines).where(model.Pipelines.id.in_(pipeline_ids)))
             await self.db.commit()
