@@ -71,9 +71,16 @@ class GitlabClient(BaseClient):
     async def get_project_pipelines_list(self, project_id: str) -> List:
         """Get all pipelines for specific project."""
         try:
-            pipelines = (await self._client.get(f"{self._base_url}/projects/{project_id}/pipelines?simple=true")).json()
+            pipelines = \
+                (await self._client.get(f"{self._base_url}/projects/{project_id}/pipelines?simple=true"))
+
+            pipelines_json = pipelines.json()
+            if pipelines.status_code != 200:
+                raise GitLabConnectionException(detail=f"Failed to connect to GitLab - {self._base_url}. "
+                                                       f"Message - {pipelines_json}.")
+
             pipeline_result = []
-            for pipeline in pipelines:
+            for pipeline in pipelines_json:
                 pipeline_json = {
                     "id": pipeline['id'],
                     "status": pipeline['status'],
