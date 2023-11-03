@@ -3,7 +3,8 @@ from fastapi import Request
 from daos.pipelines_dao import PipelineDAO
 from exceptions.pipeline_exceptions import PipelineNotFoundException
 from schemas.applications_sch import ApplicationOut
-from schemas.pipelines_sch import PipelineOut, GitlabStartPipelineParams, JenkinsStartPipelineParams
+from schemas.pipelines_sch import PipelineOut, GitlabStartPipelineParams, JenkinsStartPipelineParams, \
+    GithubStartPipelineParams
 from utils.clients.client_manager import ClientManager
 from utils.enums import AppType, SessionAttributes, AccessLevel
 from utils.response import ok
@@ -147,7 +148,59 @@ class PipelinesService:
 
         pipeline, client = await self._get_pipeline_and_client(pipeline_id)
         data = await client.get_project_pipelines_list(pipeline.project_id, pipeline.name)
-        return ok(message="Successfully provided gitlab pipeline builds.", data=data)
+        return ok(message="Successfully provided github pipeline builds.", data=data)
+
+    async def get_github_pipeline_build(self, request: Request, pipeline_id: int, build_id: int):
+        await self._validate_user_access(request, pipeline_id)
+
+        pipeline, client = await self._get_pipeline_and_client(pipeline_id)
+        data = await client.get_project_pipeline_info(pipeline.project_id, build_id)
+        data['name'] = pipeline.name
+        return ok(message="Successfully provided github pipeline build.", data=data)
+
+    async def get_github_pipeline_params(self, request: Request, pipeline_id: int):
+        await self._validate_user_access(request, pipeline_id)
+
+        pipeline, client = await self._get_pipeline_and_client(pipeline_id)
+        params = await client.get_pipeline_params(pipeline.project_id)
+        return ok(message="Successfully provided github pipeline params.", data=params)
+
+    async def run_new_github_pipeline_build(self, request: Request,
+                                            pipeline_id: int, params: GithubStartPipelineParams):
+        await self._validate_user_access(request, pipeline_id)
+
+        pipeline, client = await self._get_pipeline_and_client(pipeline_id)
+        await client.start_new_pipeline(pipeline.name, pipeline.project_id, params.model_dump())
+        return ok(message="Successfully started github pipeline build.")
+
+    async def retry_github_pipeline_build(self, request: Request, pipeline_id: int, build_id: int):
+        await self._validate_user_access(request, pipeline_id)
+
+        pipeline, client = await self._get_pipeline_and_client(pipeline_id)
+        await client.retry_pipeline(pipeline.project_id, build_id)
+        return ok(message="Successfully retried github pipeline build.")
+
+    async def cancel_github_pipeline_build(self, request: Request, pipeline_id: int, build_id: int):
+        await self._validate_user_access(request, pipeline_id)
+
+        pipeline, client = await self._get_pipeline_and_client(pipeline_id)
+        data = await client.cancel_pipeline(pipeline.project_id, build_id)
+        return ok(message="Successfully canceled github pipeline build.", data=data)
+
+    async def get_github_pipeline_build_jobs(self, request: Request, pipeline_id: int, build_id: int):
+        await self._validate_user_access(request, pipeline_id)
+
+        pipeline, client = await self._get_pipeline_and_client(pipeline_id)
+        data = await client.get_project_pipeline_jobs(pipeline.project_id, build_id)
+        return ok(message="Successfully provided github pipeline jobs.", data=data)
+
+    async def get_github_pipeline_build_job_trace(self, request: Request,
+                                                  pipeline_id: int, build_id: int, job_id: int):
+        await self._validate_user_access(request, pipeline_id)
+
+        pipeline, client = await self._get_pipeline_and_client(pipeline_id)
+        data = await client.get_project_pipeline_job_logs(pipeline.project_id, job_id)
+        return ok(message="Successfully provided github pipeline job traces.", data=data)
 
     async def get_all_jenkins_pipelines(self, request: Request):
         user_access_level = request.session.get(SessionAttributes.USER_ACCESS_LEVEL.value)

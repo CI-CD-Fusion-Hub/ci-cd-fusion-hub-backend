@@ -15,7 +15,7 @@ class UserDAO:
     async def get_all(self) -> List[model.Users]:
         """Fetch all users."""
         async with self.db:
-            result = await self.db.execute(select(model.Users))
+            result = await self.db.execute(select(model.Users).order_by(model.Users.first_name))
             return result.scalars().all()
 
     async def get_by_id(self, user_id: int) -> model.Users:
