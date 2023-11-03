@@ -3,13 +3,14 @@ from exceptions.access_roles_exception import AccessRoleNotFoundException
 from exceptions.application_exception import ApplicationNotFoundException
 from exceptions.custom_http_expeption import CustomHTTPException
 from exceptions.database_exception import DatabaseIntegrityException
+from exceptions.github_expeption import CustomGithubException
 from exceptions.gitlab_exception import GitLabConnectionException
 from exceptions.pipeline_exceptions import PipelineNotFoundException
 from exceptions.user_exception import UserNotFoundException
 from utils.error_handlers import (exception_handler, http_exception_handler, user_exception_handler,
                                   application_exception_handler, access_roles_exception_handler,
                                   database_integrity_exception_handler, pipelines_exception_handler,
-                                  gitlab_exception_handler)
+                                  gitlab_exception_handler, github_exception_handler)
 
 
 async def exception_handler_(request: Request, exc: Exception):
@@ -44,6 +45,10 @@ async def gitlab_exception_handler_(request: Request, exc: GitLabConnectionExcep
     return await gitlab_exception_handler(request, exc)
 
 
+async def github_exception_handler_(request: Request, exc: CustomGithubException):
+    return await github_exception_handler(request, exc)
+
+
 def configure(app: FastAPI):
     app.exception_handler(Exception)(exception_handler_)
     app.exception_handler(CustomHTTPException)(http_exception_handler_)
@@ -53,3 +58,5 @@ def configure(app: FastAPI):
     app.exception_handler(DatabaseIntegrityException)(database_integrity_exception_handler_)
     app.exception_handler(PipelineNotFoundException)(pipelines_exception_handler_)
     app.exception_handler(GitLabConnectionException)(gitlab_exception_handler_)
+    app.exception_handler(CustomGithubException)(github_exception_handler_)
+

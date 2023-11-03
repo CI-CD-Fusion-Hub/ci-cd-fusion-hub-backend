@@ -45,3 +45,11 @@ class JenkinsStartPipelineParams(BaseModel):
             }
         }
         extra = "allow"
+
+
+class GithubStartPipelineParams(BaseModel):
+    class Config:
+        json_schema_extra = {
+            "branch": "main"
+        }
+        extra = "allow"

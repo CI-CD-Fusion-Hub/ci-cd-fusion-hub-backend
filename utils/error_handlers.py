@@ -5,6 +5,7 @@ from exceptions.access_roles_exception import AccessRoleNotFoundException
 from exceptions.application_exception import ApplicationNotFoundException
 from exceptions.custom_http_expeption import CustomHTTPException
 from exceptions.database_exception import DatabaseIntegrityException
+from exceptions.github_expeption import CustomGithubException
 from exceptions.gitlab_exception import GitLabConnectionException
 from exceptions.pipeline_exceptions import PipelineNotFoundException
 from exceptions.user_exception import UserNotFoundException
@@ -18,7 +19,7 @@ async def exception_handler(request: Request, exc: Exception):
 
 async def http_exception_handler(request: Request, exc: CustomHTTPException):
     traceback.print_exc()
-    return error(exc.detail, exc.status_code)
+    return error(message=exc.detail, status_code=exc.status_code)
 
 
 async def user_exception_handler(request: Request, exc: UserNotFoundException):
@@ -49,3 +50,8 @@ async def pipelines_exception_handler(request: Request, exc: PipelineNotFoundExc
 async def gitlab_exception_handler(request: Request, exc: GitLabConnectionException):
     traceback.print_exc()
     return error(message=exc.detail)
+
+
+async def github_exception_handler(request: Request, exc: CustomGithubException):
+    traceback.print_exc()
+    return error(message=exc.detail, status_code=exc.status_code)
