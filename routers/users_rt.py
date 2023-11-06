@@ -43,10 +43,9 @@ async def create_user(request: Request, user_data: CreateUser,
 
 @router.put("/users/{user_id}", tags=["users"])
 @auth_required
-@admin_access_required
 async def update_user(request: Request, user_id: int, updated_data: UpdateUser,
                       user_service: UserService = Depends(create_user_service)) -> UserResponse:
-    return await user_service.update_user(user_id, updated_data)
+    return await user_service.update_user(request, user_id, updated_data)
 
 
 @router.delete("/users/{user_id}", tags=["users"])

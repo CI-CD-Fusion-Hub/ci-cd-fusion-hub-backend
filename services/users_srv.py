@@ -13,6 +13,31 @@ class UserService:
     def __init__(self):
         self.user_dao = UserDAO()
 
+    @classmethod
+    def _is_user_admin(cls, request: Request, user_id: int):
+        user_access_level = request.session.get(SessionAttributes.USER_ACCESS_LEVEL.value)
+        user_id_session = request.session.get(SessionAttributes.USER_ID.value)
+        if user_access_level != AccessLevel.ADMIN.value and user_id_session != user_id:
+            raise UserNotFoundException(f"User with ID {user_id} does not exist.")
+
+        return user_access_level == AccessLevel.ADMIN.value
+
+    @classmethod
+    def _verify_password(cls, plain_password: str, hashed_password: str) -> bool:
+        return hashlib.sha512(plain_password.encode('utf-8')).hexdigest() == hashed_password
+
+    @classmethod
+    async def logout(cls, request):
+        request.session.clear()
+        return ok(message="Successful logout.")
+
+    @classmethod
+    async def get_user_info_from_request(cls, request):
+        return ok(
+            message="Successfully provided user details.",
+            data=request.session.get(SessionAttributes.USER_INFO.value)
+        )
+
     async def get_all_users(self):
         users = await self.user_dao.get_all()
         return ok(message="Successfully provided all users.",
@@ -50,7 +75,11 @@ class UserService:
         except ValueError as e:
             return error(message=str(e))
 
-    async def update_user(self, user_id: int, user_data: UpdateUser):
+    async def update_user(self, request: Request, user_id: int, user_data: UpdateUser):
+        if not self._is_user_admin(request, user_id):
+            del user_data.access_level
+            del user_data.status
+
         user = await self.user_dao.get_by_id(user_id)
         if not user:
             raise UserNotFoundException(f"User with ID {user_id} does not exist.")
@@ -92,20 +121,4 @@ class UserService:
         request.session['STATUS'] = user.status
 
         return ok(message="Successfully logged in.", data=UserBaseOut.model_validate(user.as_dict()))
-
-    @classmethod
-    def _verify_password(cls, plain_password: str, hashed_password: str) -> bool:
-        return hashlib.sha512(plain_password.encode('utf-8')).hexdigest() == hashed_password
-
-    @classmethod
-    async def logout(cls, request):
-        request.session.clear()
-        return ok(message="Successful logout.")
-
-    @classmethod
-    async def get_user_info_from_request(cls, request):
-        return ok(
-            message="Successfully provided user details.",
-            data=request.session.get(SessionAttributes.USER_INFO.value)
-        )
 
