@@ -253,9 +253,9 @@ class GitlabClient(BaseClient):
         """Retry GitLab pipeline."""
         try:
             result = (await self._client.post(
-                f"{self._base_url}/projects/{project_id}/pipelines/{pipeline_id}/retry")).json()
-
-            return result
+                f"{self._base_url}/projects/{project_id}/pipelines/{pipeline_id}/retry"))
+            result.raise_for_status()
+            return result.json()
         except httpx.RequestError:
             raise GitLabConnectionException(detail=f"Failed to connect to GitLab - {self._base_url}.")
         except ValueError:

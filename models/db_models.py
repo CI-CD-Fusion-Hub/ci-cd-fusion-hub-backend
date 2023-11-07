@@ -32,6 +32,46 @@ class Users(Base):
         }
 
 
+class UserRequestsAccess(Base):
+    __tablename__ = "users_requests"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    user_id = Column(Integer, ForeignKey('users.id', ondelete='CASCADE'))
+    status = Column(String)
+    message = Column(String)
+    created_ts = Column(TIMESTAMP, default=func.now())
+
+    pipelines = relationship("UserRequestPipelineAssociation", back_populates="user_request", lazy="joined")
+
+    def as_dict(self):
+        return {
+            'id': self.id,
+            'user_id': self.user_id,
+            'status': self.status,
+            'message': self.message,
+            'created_ts': self.created_ts.isoformat() if self.created_ts else None,
+            'pipelines': [association for association in self.pipelines] if self.pipelines else None
+        }
+
+
+class UserRequestPipelineAssociation(Base):
+    __tablename__ = "user_request_pipeline_association"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    user_request_id = Column(Integer, ForeignKey('users_requests.id', ondelete='CASCADE'))
+    pipeline_id = Column(Integer, ForeignKey('pipelines.id', ondelete='CASCADE'))
+
+    pipeline = relationship("Pipelines")
+    user_request = relationship("UserRequestsAccess", back_populates="pipelines")
+
+    def as_dict(self):
+        return {
+            'id': self.id,
+            'user_request_id': self.user_request_id,
+            'pipeline_id': self.pipeline_id
+        }
+
+
 class AccessRoles(Base):
     __tablename__ = "access_roles"
 

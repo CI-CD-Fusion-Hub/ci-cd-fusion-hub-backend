@@ -248,7 +248,7 @@ class GithubClient(BaseClient):
             repo_branches = await self.get_json(repo_branches_url)
 
             variables = [{'key': 'branch', 'type': 'choice', 'value': [x['name']
-                                                                       for x in repo_branches]}]
+                                                                       for x in repo_branches], 'required': True}]
 
             for variable in repo_variables['variables']:
                 variables.append(
