@@ -8,6 +8,7 @@ from exceptions.database_exception import DatabaseIntegrityException
 from models import db_models as model
 from schemas.users_requests_sch import CreateUsersRequest
 from utils import database
+from utils.enums import RequestStatus
 
 
 class UserRequestsDAO:
@@ -17,12 +18,15 @@ class UserRequestsDAO:
     async def get_all(self) -> List[model.UserRequestsAccess]:
         """Fetch all users requests."""
         async with self.db:
-            query = select(model.UserRequestsAccess).options(selectinload(model.UserRequestsAccess.pipelines))
+            query = select(model.UserRequestsAccess)\
+                .options(selectinload(model.UserRequestsAccess.pipelines)
+                         .selectinload(model.UserRequestPipelineAssociation.pipeline)
+                         )
             result = await self.db.execute(query)
             return result.scalars().all()
 
-    async def get_detailed_users_request_info(self, users_request_id: int):
-        """Fetch a user with their roles and pipeline access."""
+    async def get_detailed_users_request_info_by_id(self, users_request_id: int):
+        """Fetch a user request with by id."""
         async with self.db:
             stmt = (
                 select(model.UserRequestsAccess)
@@ -34,6 +38,20 @@ class UserRequestsDAO:
             )
             result = await self.db.execute(stmt)
             return result.scalars().first()
+
+    async def get_detailed_users_request_info_by_user_id(self, user_id: int):
+        """Fetch a user with their roles and pipeline access."""
+        async with self.db:
+            stmt = (
+                select(model.UserRequestsAccess)
+                .options(
+                    selectinload(model.UserRequestsAccess.pipelines)
+                    .selectinload(model.UserRequestPipelineAssociation.pipeline)
+                )
+                .where(model.UserRequestsAccess.user_id == user_id)
+            )
+            result = await self.db.execute(stmt)
+            return result.scalars().all()
 
     async def create(self, users_request_data: CreateUsersRequest) -> model.UserRequestsAccess:
         """Create a new user."""

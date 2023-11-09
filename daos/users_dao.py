@@ -111,3 +111,25 @@ class UserDAO:
             )
             result = await self.db.execute(stmt)
             return result.scalars().all()
+
+    async def get_user_unassigned_pipelines(self, user_id: int):
+        """Fetch all pipelines that are not assigned to a specific user."""
+        async with self.db:
+            stmt = (
+                select(model.Pipelines)
+                .outerjoin(
+                    model.UserRequestPipelineAssociation
+                )
+                .join(
+                    model.UserRequestsAccess,
+                    model.UserRequestPipelineAssociation.user_request_id == model.UserRequestsAccess.id
+                )
+                .where(
+                    (model.UserRequestsAccess.user_id == user_id)
+                )
+            )
+
+            result = await self.db.execute(stmt)
+            unassigned_pipelines = result.scalars().all()
+            return unassigned_pipelines
+

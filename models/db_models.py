@@ -41,7 +41,8 @@ class UserRequestsAccess(Base):
     message = Column(String)
     created_ts = Column(TIMESTAMP, default=func.now())
 
-    pipelines = relationship("UserRequestPipelineAssociation", back_populates="user_request", lazy="joined")
+    user = relationship("Users", lazy="subquery")
+    pipelines = relationship("UserRequestPipelineAssociation", back_populates="user_request", lazy="subquery")
 
     def as_dict(self):
         return {
@@ -50,6 +51,7 @@ class UserRequestsAccess(Base):
             'status': self.status,
             'message': self.message,
             'created_ts': self.created_ts.isoformat() if self.created_ts else None,
+            'user': self.user.as_dict(),
             'pipelines': [association for association in self.pipelines] if self.pipelines else None
         }
 
