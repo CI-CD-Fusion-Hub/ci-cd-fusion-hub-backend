@@ -18,6 +18,14 @@ class UserStatus(Enum):
     INACTIVE = 'inactive'
 
 
+class RequestStatus(Enum):
+    PENDING = 'pending'
+    CANCELED = 'canceled'
+    DECLINED = 'declined'
+    COMPLETED = 'completed'
+    INPROGRESS = 'in-progress'
+
+
 class SessionAttributes(Enum):
     USER_ID = 'USER_ID'
     USER_NAME = 'USER_NAME'

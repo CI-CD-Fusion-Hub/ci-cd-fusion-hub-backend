@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, Request
 
 from schemas.response_sch import Response
+from schemas.users_requests_sch import UpdateUsersRequest, CreateUsersRequest
 from services.users_srv import UserService
 from schemas.users_sch import CreateUser, UpdateUser, UserResponse, UsersResponse
 from utils.check_session import auth_required, admin_access_required
@@ -31,6 +32,34 @@ async def get_user_by_id(request: Request, user_id: int,
 async def get_user_by_id(request: Request,
                          user_service: UserService = Depends(create_user_service)) -> UserResponse:
     return await user_service.get_user_info_from_request(request)
+
+
+@router.get("/user/requests", tags=["users"])
+@auth_required
+async def get_user_requests(request: Request,
+                            user_service: UserService = Depends(create_user_service)) -> UserResponse:
+    return await user_service.get_user_requests(request)
+
+
+@router.put("/user/requests/{request_id}", tags=["users"])
+@auth_required
+async def update_user_requests(request: Request, request_id: int, users_request_data: UpdateUsersRequest,
+                               user_service: UserService = Depends(create_user_service)) -> UserResponse:
+    return await user_service.update_user_requests(request_id, users_request_data)
+
+
+@router.post("/user/requests", tags=["users"])
+@auth_required
+async def create_user_requests(request: Request, users_request_data: CreateUsersRequest,
+                               user_service: UserService = Depends(create_user_service)) -> UserResponse:
+    return await user_service.create_user_requests(request, users_request_data)
+
+
+@router.get("/user/unassigned_pipelines", tags=["users"])
+@auth_required
+async def get_user_unassigned_pipelines(request: Request,
+                                        user_service: UserService = Depends(create_user_service)) -> UserResponse:
+    return await user_service.get_user_unassigned_pipelines(request)
 
 
 @router.post("/users", tags=["users"])

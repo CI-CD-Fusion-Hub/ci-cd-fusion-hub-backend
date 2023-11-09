@@ -127,14 +127,8 @@ class GithubClient(BaseClient):
                 commit_msg = run["head_commit"]["message"]
 
                 created_at = run["created_at"]
-                completed_at = run.get("updated_at")
 
-                duration = None
-                if completed_at:
-                    created_at_time = datetime.datetime.fromisoformat(created_at.replace("Z", ""))
-                    completed_at_time = datetime.datetime.fromisoformat(completed_at.replace("Z", ""))
-                    duration = (completed_at_time - created_at_time).total_seconds()
-
+                duration = 0
                 stages = []
                 for job in job_data["jobs"]:
                     stage_name = job["name"]
@@ -142,11 +136,12 @@ class GithubClient(BaseClient):
                     started_at = job["started_at"]
                     completed_at = job["completed_at"]
 
-                    stage_duration = None
+                    stage_duration = 0
                     if started_at and completed_at:
                         started_at_time = datetime.datetime.fromisoformat(started_at.replace("Z", ""))
                         completed_at_time = datetime.datetime.fromisoformat(completed_at.replace("Z", ""))
                         stage_duration = (completed_at_time - started_at_time).total_seconds()
+                        duration += int(stage_duration)
 
                     stages.append({
                         "id": job["id"],
@@ -248,7 +243,7 @@ class GithubClient(BaseClient):
             repo_branches = await self.get_json(repo_branches_url)
 
             variables = [{'key': 'branch', 'type': 'choice', 'value': [x['name']
-                                                                       for x in repo_branches]}]
+                                                                       for x in repo_branches], 'required': True}]
 
             for variable in repo_variables['variables']:
                 variables.append(
