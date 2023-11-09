@@ -45,7 +45,7 @@ async def startup_event():
     # Create admin user
     await create_admin_user()
     # Start pipeline sync
-    # asyncio.create_task(Cron().sync_pipelines(config['pipelines_sync_interval']))
+    asyncio.create_task(Cron().sync_pipelines(config['pipelines_sync_interval']))
 
 
 async def shutdown_event():
