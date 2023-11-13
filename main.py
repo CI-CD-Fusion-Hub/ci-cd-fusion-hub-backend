@@ -19,6 +19,7 @@ events.configure(app)
 
 if __name__ == "__main__":
     LOGGING_CONFIG["formatters"]["default"]["fmt"] = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    LOGGING_CONFIG["formatters"]["access"]["fmt"] = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
     uvicorn.run(
         app,
         host=config['host'],
