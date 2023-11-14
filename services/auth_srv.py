@@ -177,6 +177,7 @@ class AuthService:
         if request.url.scheme != "https":
             original_url = original_url.replace("http://", "https://")
 
+
         index_of_question_mark = original_url.find('?')
         current_url = original_url[:index_of_question_mark] if index_of_question_mark != -1 else original_url
 
@@ -251,6 +252,8 @@ class AuthService:
         secure_url = str(request.url)
         if request.url.scheme != "https":
             secure_url = secure_url.replace("http://", "https://")
+
+        LOGGER.info(f"Original url: {secure_url}")
 
         LOGGER.info(f"Original url: {secure_url}")
 
