@@ -98,10 +98,14 @@ class AuthService:
             origin_url = str(request.url)
             # Handle localhost setup
             origin_url = origin_url.replace("0.0.0.0", "localhost")
-            origin_url = origin_url.replace(self.login_endpoint_path, "/api/v1/login/az/callback")
+            if request.url.scheme != "https":
+                origin_url = request.url.replace(scheme="https")
 
+            current_url = origin_url.replace(self.login_endpoint_path, "/api/v1/login/az/callback")
+
+            LOGGER.info(f"Original url: {origin_url}")
             auth_url = oauth2_scheme.msal_app.get_authorization_request_url(properties.adds_scope,
-                                                                        state=state, redirect_uri=origin_url)
+                                                                            state=state, redirect_uri=current_url)
             LOGGER.info(f"Generated Azure auth URL: {auth_url}")
             return auth_url
 
@@ -170,10 +174,13 @@ class AuthService:
 
         # Handle localhost setup
         original_url = original_url.replace("0.0.0.0", "localhost")
+        if request.url.scheme != "https":
+            original_url = request.url.replace(scheme="https")
 
         index_of_question_mark = original_url.find('?')
         current_url = original_url[:index_of_question_mark] if index_of_question_mark != -1 else original_url
 
+        LOGGER.info(f"Original url: {current_url}")
         token_response = oauth2_scheme.msal_app.acquire_token_by_authorization_code(
             request.query_params.get("code"), properties.adds_scope, redirect_uri=current_url
         )
@@ -245,6 +252,7 @@ class AuthService:
         if request.url.scheme != "https":
             secure_url = request.url.replace(scheme="https")
 
+        LOGGER.info(f"Original url: {secure_url}")
         cas_client = CASClient(
             version=properties.cas_version,
             service_url=secure_url,
