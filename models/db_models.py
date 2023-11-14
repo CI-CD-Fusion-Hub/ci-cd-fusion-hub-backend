@@ -1,3 +1,4 @@
+from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import relationship
 
 from utils.database import Base
@@ -179,6 +180,25 @@ class Applications(Base):
             'type': self.type,
             'regex_pattern': self.regex_pattern if self.regex_pattern else "",
             'status': self.status,
+            'created_ts': self.created_ts.isoformat() if self.created_ts else None
+        }
+
+
+class Auth(Base):
+    __tablename__ = "auth"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    type = Column(String, unique=True)
+    properties = Column(JSONB)
+    admin_users = Column(JSONB)
+    created_ts = Column(TIMESTAMP, default=func.now())
+
+    def as_dict(self):
+        return {
+            'id': self.id,
+            'type': self.type,
+            'properties': self.properties,
+            'admin_users': self.admin_users,
             'created_ts': self.created_ts.isoformat() if self.created_ts else None
         }
 

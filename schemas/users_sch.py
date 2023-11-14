@@ -132,6 +132,33 @@ class UpdateUser(BaseModel):
         return ValidatorUtils.validate_confirm_password(confirm_password, info)
 
 
+class UpdateUserProfile(BaseModel):
+    first_name: Optional[str] = None
+    last_name: Optional[str] = None
+    email: Optional[str] = None
+    password: Optional[str] = None
+    confirm_password: Optional[str] = None
+
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "first_name": "asd",
+                "last_name": "CH",
+                "email": "test1@gmail.com",
+                "password": "asdf@asdf",
+                "confirm_password": "asdf@asdf",
+            }
+        }
+
+    @field_validator("email")
+    def email_check(cls, email):
+        return ValidatorUtils.validate_email(email)
+
+    @field_validator("confirm_password")
+    def passwords_match(cls, confirm_password, info: FieldValidationInfo):
+        return ValidatorUtils.validate_confirm_password(confirm_password, info)
+
+
 class UserBaseOut(BaseModel):
     id: int
     first_name: str
@@ -140,11 +167,6 @@ class UserBaseOut(BaseModel):
     status: str
     created_ts: str
     access_level: str
-
-
-class LoginUser(BaseModel):
-    email: str
-    password: str
 
 
 class UserOut(UserBaseOut):
