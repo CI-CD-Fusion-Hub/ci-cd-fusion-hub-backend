@@ -241,9 +241,13 @@ class AuthService:
 
     async def cas_login(self, request):
         properties: CASProperties = CASProperties.model_validate((await self.auth_dao.get_all()).properties)
+        secure_url = str(request.url)
+        if request.url.scheme != "https":
+            secure_url = request.url.replace(scheme="https")
+
         cas_client = CASClient(
             version=properties.cas_version,
-            service_url=str(request.url),
+            service_url=secure_url,
             server_url=properties.cas_server_url,
             verify_ssl_certificate=properties.cas_verify_ssl
         )
