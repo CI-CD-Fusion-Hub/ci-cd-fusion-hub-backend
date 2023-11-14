@@ -220,7 +220,8 @@ class AuthService:
         cas_client.server_url = auth_db.properties['cas_server_url']
 
         user, attributes, pgtiou = cas_client.verify_ticket(ticket)
-        print(pgtiou)
+        print(user)
+        print(attributes)
 
         if not user:
             LOGGER.info(f"Ticket {ticket} It's not valid. Redirecting to cas login url.")
@@ -229,8 +230,8 @@ class AuthService:
 
         request.session['ticket'] = ticket
 
-        first_name = attributes.get('first_name', 'Unknown')
-        last_name = attributes.get('last_name', 'Unknown')
+        first_name = attributes.get('givenName', 'Unknown')
+        last_name = attributes.get('surname', 'Unknown')
         email = str(user).lower()
 
         user_db = await self.user_dao.get_by_email(email)
