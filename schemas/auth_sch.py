@@ -14,9 +14,51 @@ class LoginUser(BaseModel):
         return ValidatorUtils.validate_email(email)
 
 
+class ADDSProperties(BaseModel):
+    adds_client_id: str
+    adds_client_secret: str
+    adds_tenant_id: str
+    adds_scope: list
+
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "adds_client_id": "asdfg-asdfasdfas",
+                "adds_client_secret": "12089-34712hjaspdojkfhasd9f80",
+                "adds_tenant_id": "opsiadhjfga89sd7fy0as9dufhjas",
+                "adds_scope": [
+                    "https://graph.microsoft.com/.default"
+                ]
+            }
+        }
+
+
+class CASProperties(BaseModel):
+    cas_service_url: str
+    cas_server_url: str
+    cas_version: int
+    cas_verify_ssl: bool
+
+    @field_validator("cas_verify_ssl")
+    def validate_cas_verify_ssl(cls, value):
+        if not isinstance(value, bool):
+            raise ValueError("cas_verify_ssl must be a boolean value")
+        return value
+
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "cas_service_url": "https://test.domain/pipelines",
+                "cas_server_url": "https://cas.domain/login",
+                "cas_version": 3,
+                "cas_verify_ssl": False
+            }
+        }
+
+
 class CreateAuthMethod(BaseModel):
     type: str
-    properties: dict = {}
+    properties: CASProperties | ADDSProperties = {}
     admin_users: List[str]
 
     @field_validator("type")
