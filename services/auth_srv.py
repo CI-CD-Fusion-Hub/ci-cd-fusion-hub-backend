@@ -200,10 +200,7 @@ class AuthService:
         return ok(message="Local method.", data=auth_db.type == AuthMethods.LOCAL.value)
 
     async def cas_login(self, request):
-
         auth_db = await self.auth_dao.get_all()
-        print(type(auth_db.properties['cas_verify_ssl']))
-        print(auth_db.properties['cas_verify_ssl'])
         cas_client = CASClient(
             version=auth_db.properties['cas_version'],
             service_url=auth_db.properties['cas_service_url'],
@@ -223,8 +220,7 @@ class AuthService:
         cas_client.server_url = auth_db.properties['cas_server_url']
 
         user, attributes, pgtiou = cas_client.verify_ticket(ticket)
-        print(user)
-        print(attributes)
+        print(pgtiou)
 
         if not user:
             LOGGER.info(f"Ticket {ticket} It's not valid. Redirecting to cas login url.")
@@ -235,7 +231,7 @@ class AuthService:
 
         first_name = attributes.get('first_name', 'Unknown')
         last_name = attributes.get('last_name', 'Unknown')
-        email = attributes.get('email', 'Unknown')
+        email = str(user).lower()
 
         user_db = await self.user_dao.get_by_email(email)
         if not user_db:
