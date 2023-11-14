@@ -177,7 +177,6 @@ class AuthService:
         if request.url.scheme != "https":
             original_url = original_url.replace("http://", "https://")
 
-
         index_of_question_mark = original_url.find('?')
         current_url = original_url[:index_of_question_mark] if index_of_question_mark != -1 else original_url
 
@@ -253,13 +252,14 @@ class AuthService:
         if request.url.scheme != "https":
             secure_url = secure_url.replace("http://", "https://")
 
-        LOGGER.info(f"Original url: {secure_url}")
+        index_of_question_mark = secure_url.find('?')
+        current_url = secure_url[:index_of_question_mark] if index_of_question_mark != -1 else secure_url
 
-        LOGGER.info(f"Original url: {secure_url}")
+        LOGGER.info(f"Original url: {current_url}")
 
         cas_client = CASClient(
             version=properties.cas_version,
-            service_url=secure_url,
+            service_url=current_url,
             server_url=properties.cas_server_url,
             verify_ssl_certificate=properties.cas_verify_ssl
         )
