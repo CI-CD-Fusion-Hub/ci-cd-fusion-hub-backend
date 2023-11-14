@@ -18,6 +18,12 @@ class UserStatus(Enum):
     INACTIVE = 'inactive'
 
 
+class AuthMethods(Enum):
+    CAS = 'CAS'
+    ADDS = 'ADDS'  # Azure
+    LOCAL = 'Local'
+
+
 class RequestStatus(Enum):
     PENDING = 'pending'
     CANCELED = 'canceled'
@@ -27,9 +33,13 @@ class RequestStatus(Enum):
 
 
 class SessionAttributes(Enum):
+    AUTH_METHOD = 'AUTH_METHOD'
     USER_ID = 'USER_ID'
     USER_NAME = 'USER_NAME'
     USER_ACCESS_LEVEL = 'USER_ACCESS_LEVEL'
     USER_ROLES = 'USER_ROLES'
     USER_PIPELINES = 'USER_PIPELINES'
     USER_INFO = 'USER_INFO'
+
+
+

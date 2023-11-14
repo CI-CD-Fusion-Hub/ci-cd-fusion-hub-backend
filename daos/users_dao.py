@@ -133,3 +133,9 @@ class UserDAO:
             unassigned_pipelines = result.scalars().all()
             return unassigned_pipelines
 
+    async def delete_all(self):
+        """Delete all user."""
+        async with self.db:
+            await self.db.execute(delete(model.Users))
+            await self.db.commit()
+

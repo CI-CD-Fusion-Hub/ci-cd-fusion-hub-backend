@@ -1,15 +1,17 @@
 import hashlib
+
 from fastapi import Request
 from fastapi import status as Status
 
+from config.config import Settings
 from daos.pipelines_dao import PipelineDAO
 from daos.users_requests_dao import UserRequestsDAO
 from exceptions.user_exception import UserNotFoundException
 from schemas.pipelines_sch import PipelineOut
 from schemas.users_requests_sch import UsersRequestOut, User, Pipeline, UpdateUsersRequest, CreateUsersRequest
-from schemas.users_sch import CreateUser, UserOut, UpdateUser, UserBaseOut, LoginUser
+from schemas.users_sch import CreateUser, UserOut, UpdateUser, UserBaseOut, UpdateUserProfile
 from daos.users_dao import UserDAO
-from utils.enums import AccessLevel, UserStatus, SessionAttributes, RequestStatus
+from utils.enums import AccessLevel, SessionAttributes, RequestStatus
 from utils.response import ok, error
 
 
@@ -18,25 +20,6 @@ class UserService:
         self.user_dao = UserDAO()
         self.user_requests_dao = UserRequestsDAO()
         self.pipelines_dao = PipelineDAO()
-
-
-    @classmethod
-    def _is_user_admin(cls, request: Request, user_id: int):
-        user_access_level = request.session.get(SessionAttributes.USER_ACCESS_LEVEL.value)
-        user_id_session = request.session.get(SessionAttributes.USER_ID.value)
-        if user_access_level != AccessLevel.ADMIN.value and user_id_session != user_id:
-            raise UserNotFoundException(f"User with ID {user_id} does not exist.")
-
-        return user_access_level == AccessLevel.ADMIN.value
-
-    @classmethod
-    def _verify_password(cls, plain_password: str, hashed_password: str) -> bool:
-        return hashlib.sha512(plain_password.encode('utf-8')).hexdigest() == hashed_password
-
-    @classmethod
-    async def logout(cls, request):
-        request.session.clear()
-        return ok(message="Successful logout.")
 
     @classmethod
     async def get_user_info_from_request(cls, request):
@@ -82,11 +65,7 @@ class UserService:
         except ValueError as e:
             return error(message=str(e))
 
-    async def update_user(self, request: Request, user_id: int, user_data: UpdateUser):
-        if not self._is_user_admin(request, user_id):
-            del user_data.access_level
-            del user_data.status
-
+    async def update_user(self, user_id: int, user_data: UpdateUser | UpdateUserProfile):
         user = await self.user_dao.get_by_id(user_id)
         if not user:
             raise UserNotFoundException(f"User with ID {user_id} does not exist.")
@@ -103,7 +82,11 @@ class UserService:
 
     async def delete_user(self, user_id: int):
         if not await self.user_dao.get_by_id(user_id):
-            raise UserNotFoundException(f"User with ID {user_id} does not exist.")
+            return error(
+                message=f"User with ID {user_id} does not exist.",
+                status_code=Status.HTTP_404_NOT_FOUND
+            )
+
         await self.user_dao.delete(user_id)
         return ok(message="User has been successfully deleted.")
 
@@ -111,23 +94,6 @@ class UserService:
         unassigned_roles = await self.user_dao.get_user_unassigned_roles(user_id)
         return ok(message="Successfully provided unassigned users for access role.",
                   data=[role.as_dict() for role in unassigned_roles])
-
-    async def login(self, request: Request, credentials: LoginUser):
-        user = await self.user_dao.get_by_email(credentials.email)
-        if not user:
-            raise UserNotFoundException(f"User with Email {credentials.email} does not exist.")
-
-        if user.status != UserStatus.ACTIVE.value:
-            raise UserNotFoundException(f"User with Email {credentials.email} is inactive.")
-
-        if not self._verify_password(credentials.password, user.password):
-            raise UserNotFoundException("Invalid password or email.")
-
-        request.session['USER_NAME'] = credentials.email
-        request.session['ACCESS_LEVEL'] = user.access_level
-        request.session['STATUS'] = user.status
-
-        return ok(message="Successfully logged in.", data=UserBaseOut.model_validate(user.as_dict()))
 
     async def get_user_requests(self, request):
         user_id_session = request.session.get(SessionAttributes.USER_ID.value)
@@ -155,7 +121,7 @@ class UserService:
         if not user_request:
             return error(
                 message=f"User request with ID {request_id} does not exist.",
-                status_code=Status.HTTP_400_BAD_REQUEST
+                status_code=Status.HTTP_404_NOT_FOUND
             )
 
         if user_request.status != RequestStatus.PENDING.value \
@@ -227,11 +193,9 @@ class UserService:
         return existing_pipelines
 
     async def get_user_unassigned_pipelines(self, request):
-        user_id = request.session.get(SessionAttributes.USER_ID.value)
         user_pipeline_ids = set(request.session.get(SessionAttributes.USER_PIPELINES.value))
         all_pipeline_objects = await self.pipelines_dao.get_all()
         unassigned_pipelines = [pipeline for pipeline in all_pipeline_objects if pipeline.id not in user_pipeline_ids]
 
         return ok(message="Successfully provided unassigned pipelines for user.",
                   data=[PipelineOut.model_validate(pipeline.as_dict()) for pipeline in unassigned_pipelines])
-
