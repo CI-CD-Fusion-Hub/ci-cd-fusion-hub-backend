@@ -186,10 +186,16 @@ class AuthService:
 
     async def get_auth_method(self):
         auth_db = await self.auth_dao.get_all()
+        if not auth_db:
+            return ok(message="Successfully provided access role.", data={})
+
         return ok(message="Successfully provided access role.", data=AuthOut.model_validate(auth_db.as_dict()))
 
     async def get_login_auth_method(self):
         auth_db = await self.auth_dao.get_all()
+        if not auth_db:
+            return ok(message="Local method.", data=True)
+
         return ok(message="Local method.", data=auth_db.type == AuthMethods.LOCAL.value)
 
     async def cas_login(self, request):
