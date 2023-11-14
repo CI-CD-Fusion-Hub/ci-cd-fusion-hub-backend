@@ -75,9 +75,10 @@ class AuthService:
             current_url = current_url.replace("0.0.0.0", "localhost")
 
         current_url = current_url.replace("/api/v1/login", "/api/v1/login/az/callback")
-        return oauth2_scheme.msal_app.get_authorization_request_url(az.properties['adds_scope'], state=state, redirect_uri=current_url)
+        return oauth2_scheme.msal_app.get_authorization_request_url(az.properties['adds_scope'],
+                                                                    state=state, redirect_uri=current_url)
 
-    async def az_callback(self, request, code, state):
+    async def az_callback(self, request: Request, code: str, state: str) -> RedirectResponse:
         if code is None or state is None:
             return error(
                 message="Code and state are required.",
@@ -159,9 +160,9 @@ class AuthService:
         try:
             auth_db = await self.auth_dao.get_all()
             if not auth_db:
-                auth = await self.auth_dao.create(auth_data)
+                auth_db = await self.auth_dao.create(auth_data)
             else:
-                auth = await self.auth_dao.update(auth_db.id, auth_data.model_dump())
+                auth_db = await self.auth_dao.update(auth_db.id, auth_data.model_dump())
 
             if auth_db.type != auth_data.type:
                 await self.user_dao.delete_all()
@@ -208,13 +209,16 @@ class AuthService:
         )
 
         ticket = request.query_params.get('ticket')
-        cas_client.server_url = auth_db.properties['cas_server_url']
+
         if not ticket:
             LOGGER.info("No ticket, the request come from end user, send to CAS login")
+            cas_client.server_url = auth_db.properties['cas_server_url']
             return RedirectResponse(cas_client.get_login_url())
 
         LOGGER.info(f"There is a ticket, the request come from CAS as callback: {ticket}")
         LOGGER.info(f"Ticket {ticket} validating...")
+
+        cas_client.server_url = auth_db.properties['cas_server_url']
 
         user, attributes, pgtiou = cas_client.verify_ticket(ticket)
         print(user)
@@ -222,6 +226,7 @@ class AuthService:
 
         if not user:
             LOGGER.info(f"Ticket {ticket} It's not valid. Redirecting to cas login url.")
+            cas_client.server_url = auth_db.properties['cas_server_url']
             return RedirectResponse(cas_client.get_login_url())
 
         request.session['ticket'] = ticket
