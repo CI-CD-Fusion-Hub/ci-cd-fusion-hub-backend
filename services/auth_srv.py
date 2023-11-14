@@ -200,7 +200,54 @@ class AuthService:
 
     async def cas_login(self, request):
         auth_db = await self.auth_dao.get_all()
-        pass
+        cas_client = CASClient(
+            version=auth_db.properties['cas_version'],
+            service_url=auth_db.properties['cas_service_url'],
+            server_url=auth_db.properties['cas_server_url'],
+            verify_ssl_certificate=auth_db.properties['cas_verify_ssl']
+        )
+
+        ticket = request.query_params.get('ticket')
+        cas_client.server_url = auth_db.properties['cas_server_url']
+        if not ticket:
+            LOGGER.info("No ticket, the request come from end user, send to CAS login")
+            return RedirectResponse(cas_client.get_login_url())
+
+        LOGGER.info(f"There is a ticket, the request come from CAS as callback: {ticket}")
+        LOGGER.info(f"Ticket {ticket} validating...")
+
+        user, attributes, pgtiou = cas_client.verify_ticket(ticket)
+        print(user)
+        print(attributes)
+
+        if not user:
+            LOGGER.info(f"Ticket {ticket} It's not valid. Redirecting to cas login url.")
+            return RedirectResponse(cas_client.get_login_url())
+
+        request.session['ticket'] = ticket
+
+        first_name = attributes.get('first_name', 'Unknown')
+        last_name = attributes.get('last_name', 'Unknown')
+        email = attributes.get('email', 'Unknown')
+
+        user_db = await self.user_dao.get_by_email(email)
+        if not user_db:
+            user = CreateUser(
+                first_name=first_name,
+                last_name=last_name,
+                email=email,
+                password="",
+                confirm_password="",
+                status=UserStatus.ACTIVE.value,
+                access_level=AccessLevel.NORMAL.value
+            )
+            await self.user_dao.create(user)
+
+        request.session[SessionAttributes.USER_NAME.value] = email
+        LOGGER.info(f"Ticket {ticket} is valid.")
+        return RedirectResponse(url="/pipelines")
+
+
 
 
 
