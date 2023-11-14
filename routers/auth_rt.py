@@ -62,8 +62,8 @@ async def login_user(request: Request, auth_service: AuthService = Depends(creat
     return await auth_service.logout(request)
 
 
-@auth_required
-@admin_access_required
+# @auth_required
+# @admin_access_required
 @router.post("/auth_method", tags=["auth"])
 async def add_auth_method(request: Request, auth_data: CreateAuthMethod,
                           auth_service: AuthService = Depends(create_auth_service)):

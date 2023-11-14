@@ -253,6 +253,7 @@ class AuthService:
             secure_url = request.url.replace(scheme="https")
 
         LOGGER.info(f"Original url: {secure_url}")
+
         cas_client = CASClient(
             version=properties.cas_version,
             service_url=secure_url,
