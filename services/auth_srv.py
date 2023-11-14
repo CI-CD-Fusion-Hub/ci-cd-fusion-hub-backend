@@ -99,7 +99,7 @@ class AuthService:
             # Handle localhost setup
             origin_url = origin_url.replace("0.0.0.0", "localhost")
             if request.url.scheme != "https":
-                origin_url = request.url.replace(scheme="https")
+                origin_url = origin_url.replace("http://", "https://")
 
             current_url = origin_url.replace(self.login_endpoint_path, "/api/v1/login/az/callback")
 
@@ -175,7 +175,8 @@ class AuthService:
         # Handle localhost setup
         original_url = original_url.replace("0.0.0.0", "localhost")
         if request.url.scheme != "https":
-            original_url = request.url.replace(scheme="https")
+            original_url = original_url.replace("http://", "https://")
+
 
         index_of_question_mark = original_url.find('?')
         current_url = original_url[:index_of_question_mark] if index_of_question_mark != -1 else original_url
@@ -250,7 +251,9 @@ class AuthService:
         properties: CASProperties = CASProperties.model_validate((await self.auth_dao.get_all()).properties)
         secure_url = str(request.url)
         if request.url.scheme != "https":
-            secure_url = request.url.replace(scheme="https")
+            secure_url = secure_url.replace("http://", "https://")
+
+        LOGGER.info(f"Original url: {secure_url}")
 
         LOGGER.info(f"Original url: {secure_url}")
 
