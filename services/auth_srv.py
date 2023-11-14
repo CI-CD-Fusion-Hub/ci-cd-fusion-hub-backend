@@ -181,7 +181,7 @@ class AuthService:
             except ValueError:
                 LOGGER.info("User with that name already exist.")
 
-            return ok(message="Successfully created auth method.", data=AuthOut.model_validate(auth.as_dict()))
+            return ok(message="Successfully created auth method.", data=AuthOut.model_validate(auth_db.as_dict()))
         except ValueError as e:
             return error(message=str(e))
 
