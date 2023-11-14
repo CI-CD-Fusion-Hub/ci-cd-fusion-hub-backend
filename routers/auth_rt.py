@@ -18,11 +18,10 @@ def create_auth_service():
 
 @router.get("/login", tags=["auth"])
 @auth_method_required
-async def azure_login_user(request: Request,
-                           auth_service: AuthService = Depends(create_auth_service)) -> UserResponse:
+async def login_user(request: Request, auth_service: AuthService = Depends(create_auth_service)) -> UserResponse:
     auth_method = request.session.get(SessionAttributes.AUTH_METHOD.value)
     if auth_method == AuthMethods.ADDS.value:
-        return await auth_service.az_login(request)
+        return await auth_service.azure_login(request)
     if auth_method == AuthMethods.CAS.value:
         return await auth_service.cas_login(request)
     else:
@@ -33,8 +32,8 @@ async def azure_login_user(request: Request,
 
 
 @router.get("/login/az/callback", tags=["auth"])
-async def azure_login_user(request: Request, code: str = None, state: str = None,
-                           auth_service: AuthService = Depends(create_auth_service)):
+async def azure_callback(request: Request, code: str = None, state: str = None,
+                         auth_service: AuthService = Depends(create_auth_service)):
     return await auth_service.az_callback(request, code, state)
 
 
@@ -62,9 +61,9 @@ async def get_login_auth_method(request: Request,
 async def login_user(request: Request, auth_service: AuthService = Depends(create_auth_service)) -> Response:
     return await auth_service.logout(request)
 
-# Revert this in prod
-# @auth_required
-# @admin_access_required
+
+@auth_required
+@admin_access_required
 @router.post("/auth_method", tags=["auth"])
 async def add_auth_method(request: Request, auth_data: CreateAuthMethod,
                           auth_service: AuthService = Depends(create_auth_service)):

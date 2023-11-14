@@ -3,15 +3,16 @@ from fastapi.security import OAuth2AuthorizationCodeBearer
 from msal import ConfidentialClientApplication
 
 from daos.auth_dao import AuthDAO
+from schemas.auth_sch import ADDSProperties
 
 
 async def get_azure_config_from_db():
     auth_dao = AuthDAO()
-    auth = await auth_dao.get_all()
+    properties = ADDSProperties.model_validate((await auth_dao.get_all()).properties)
     azure_cfg = {
-        "tenant_id": auth.properties['adds_tenant_id'],
-        "client_id": auth.properties['adds_client_id'],
-        "client_secret": auth.properties['adds_client_secret'],
+        "tenant_id": properties.adds_tenant_id,
+        "client_id": properties.adds_client_id,
+        "client_secret": properties.adds_client_secret,
     }
 
     if not azure_cfg.get("tenant_id") or not azure_cfg.get("client_id") or not azure_cfg.get("client_secret"):

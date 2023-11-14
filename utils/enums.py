@@ -33,6 +33,7 @@ class RequestStatus(Enum):
 
 
 class SessionAttributes(Enum):
+    OAUTH_STATE = 'oauth_state'
     AUTH_METHOD = 'AUTH_METHOD'
     USER_ID = 'USER_ID'
     USER_NAME = 'USER_NAME'

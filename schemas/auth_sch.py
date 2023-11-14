@@ -34,7 +34,6 @@ class ADDSProperties(BaseModel):
 
 
 class CASProperties(BaseModel):
-    cas_service_url: str
     cas_server_url: str
     cas_version: int
     cas_verify_ssl: bool
@@ -48,7 +47,6 @@ class CASProperties(BaseModel):
     class Config:
         json_schema_extra = {
             "example": {
-                "cas_service_url": "https://test.domain/pipelines",
                 "cas_server_url": "https://cas.domain/login",
                 "cas_version": 3,
                 "cas_verify_ssl": False
