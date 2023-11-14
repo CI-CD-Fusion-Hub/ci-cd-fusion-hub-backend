@@ -162,10 +162,10 @@ class AuthService:
             if not auth_db:
                 auth_db = await self.auth_dao.create(auth_data)
             else:
+                if auth_db.type != auth_data.type:
+                    await self.user_dao.delete_all()
                 auth_db = await self.auth_dao.update(auth_db.id, auth_data.model_dump())
 
-            if auth_db.type != auth_data.type:
-                await self.user_dao.delete_all()
             try:
                 for user_email in auth_data.admin_users:
                     user = CreateUser(
@@ -200,7 +200,10 @@ class AuthService:
         return ok(message="Local method.", data=auth_db.type == AuthMethods.LOCAL.value)
 
     async def cas_login(self, request):
+
         auth_db = await self.auth_dao.get_all()
+        print(type(auth_db.properties['cas_verify_ssl']))
+        print(auth_db.properties['cas_verify_ssl'])
         cas_client = CASClient(
             version=auth_db.properties['cas_version'],
             service_url=auth_db.properties['cas_service_url'],
@@ -209,7 +212,6 @@ class AuthService:
         )
 
         ticket = request.query_params.get('ticket')
-
         if not ticket:
             LOGGER.info("No ticket, the request come from end user, send to CAS login")
             cas_client.server_url = auth_db.properties['cas_server_url']

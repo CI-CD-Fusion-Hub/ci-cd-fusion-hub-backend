@@ -12,9 +12,6 @@ LOGGER = Logger().start_logger()
 config = Settings()
 
 
-
-
-
 def auth_required(function_to_protect):
     @wraps(function_to_protect)
     async def wrapper(request: Request, *args, **kwargs):
