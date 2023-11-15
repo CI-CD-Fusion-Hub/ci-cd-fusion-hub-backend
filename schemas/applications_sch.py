@@ -76,7 +76,6 @@ class ApplicationOut(BaseModel):
     id: int
     name: str
     auth_user: str
-    auth_pass: str
     base_url: str
     type: str
     status: str

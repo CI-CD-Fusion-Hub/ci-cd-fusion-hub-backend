@@ -7,7 +7,7 @@ from fastapi import status as Status
 from fastapi.responses import RedirectResponse
 from cas import CASClient
 
-
+from config.events_config import create_admin_user
 from daos.auth_dao import AuthDAO
 from exceptions.custom_http_expeption import CustomHTTPException
 from schemas.auth_sch import LoginUser, CreateAuthMethod, AuthOut, CASProperties, ADDSProperties
@@ -210,6 +210,10 @@ class AuthService:
             LOGGER.info("Auth data updated.")
 
         try:
+            if auth_data.type == AuthMethods.LOCAL.value:
+                await create_admin_user()
+                LOGGER.info("Admin user from environment is created.")
+
             for user_email in auth_data.admin_users:
                 user = CreateUser(
                     first_name="Admin",
