@@ -10,7 +10,7 @@ from cas import CASClient
 from config.events_config import create_admin_user
 from daos.auth_dao import AuthDAO
 from exceptions.custom_http_expeption import CustomHTTPException
-from schemas.auth_sch import LoginUser, CreateAuthMethod, AuthOut, CASProperties, ADDSProperties
+from schemas.auth_sch import LoginUser, CreateAuthMethod, AuthOut, CASProperties, AADProperties
 from schemas.users_sch import UserBaseOut, CreateUser
 from daos.users_dao import UserDAO
 from utils.enums import UserStatus, SessionAttributes, AccessLevel, AuthMethods
@@ -92,7 +92,7 @@ class AuthService:
         request.session[SessionAttributes.OAUTH_STATE.value] = state
 
         try:
-            properties = ADDSProperties.model_validate((await self.auth_dao.get_all()).properties)
+            properties = AADProperties.model_validate((await self.auth_dao.get_all()).properties)
             await oauth2_scheme.set_azure_config()
 
             origin_url = str(request.url)
@@ -104,7 +104,7 @@ class AuthService:
             current_url = origin_url.replace(self.login_endpoint_path, "/api/v1/login/az/callback")
 
             LOGGER.info(f"Original url: {origin_url}")
-            auth_url = oauth2_scheme.msal_app.get_authorization_request_url(properties.adds_scope,
+            auth_url = oauth2_scheme.msal_app.get_authorization_request_url(properties.aad_scope,
                                                                             state=state, redirect_uri=current_url)
             LOGGER.info(f"Generated Azure auth URL: {auth_url}")
             return auth_url
@@ -168,7 +168,7 @@ class AuthService:
                 status_code=Status.HTTP_400_BAD_REQUEST
             )
 
-        properties = ADDSProperties.model_validate((await self.auth_dao.get_all()).properties)
+        properties = AADProperties.model_validate((await self.auth_dao.get_all()).properties)
 
         original_url = str(request.url)
 
@@ -182,7 +182,7 @@ class AuthService:
 
         LOGGER.info(f"Original url: {current_url}")
         token_response = oauth2_scheme.msal_app.acquire_token_by_authorization_code(
-            request.query_params.get("code"), properties.adds_scope, redirect_uri=current_url
+            request.query_params.get("code"), properties.aad_scope, redirect_uri=current_url
         )
 
         if "error" in token_response:

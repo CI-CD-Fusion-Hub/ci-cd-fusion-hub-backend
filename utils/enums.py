@@ -20,7 +20,7 @@ class UserStatus(Enum):
 
 class AuthMethods(Enum):
     CAS = 'CAS'
-    ADDS = 'ADDS'  # Azure
+    AAD = 'Azure AD'
     LOCAL = 'Local'
 
 

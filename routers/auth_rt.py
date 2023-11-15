@@ -20,7 +20,7 @@ def create_auth_service():
 @auth_method_required
 async def login_user(request: Request, auth_service: AuthService = Depends(create_auth_service)) -> UserResponse:
     auth_method = request.session.get(SessionAttributes.AUTH_METHOD.value)
-    if auth_method == AuthMethods.ADDS.value:
+    if auth_method == AuthMethods.AAD.value:
         return await auth_service.azure_login(request)
     if auth_method == AuthMethods.CAS.value:
         return await auth_service.cas_login(request)

@@ -14,19 +14,19 @@ class LoginUser(BaseModel):
         return ValidatorUtils.validate_email(email)
 
 
-class ADDSProperties(BaseModel):
-    adds_client_id: str
-    adds_client_secret: str
-    adds_tenant_id: str
-    adds_scope: list
+class AADProperties(BaseModel):
+    aad_client_id: str
+    aad_client_secret: str
+    aad_tenant_id: str
+    aad_scope: list
 
     class Config:
         json_schema_extra = {
             "example": {
-                "adds_client_id": "asdfg-asdfasdfas",
-                "adds_client_secret": "12089-34712hjaspdojkfhasd9f80",
-                "adds_tenant_id": "opsiadhjfga89sd7fy0as9dufhjas",
-                "adds_scope": [
+                "aad_client_id": "asdfg-asdfasdfas",
+                "aad_client_secret": "12089-34712hjaspdojkfhasd9f80",
+                "aad_tenant_id": "opsiadhjfga89sd7fy0as9dufhjas",
+                "aad_scope": [
                     "https://graph.microsoft.com/.default"
                 ]
             }
@@ -60,7 +60,7 @@ class LocalProperties(BaseModel):
 
 class CreateAuthMethod(BaseModel):
     type: str
-    properties: CASProperties | ADDSProperties | LocalProperties = {}
+    properties: CASProperties | AADProperties | LocalProperties = {}
     admin_users: List[str]
 
     @field_validator("type")
