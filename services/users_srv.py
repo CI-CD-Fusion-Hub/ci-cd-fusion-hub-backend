@@ -11,7 +11,7 @@ from schemas.pipelines_sch import PipelineOut
 from schemas.users_requests_sch import UsersRequestOut, User, Pipeline, UpdateUsersRequest, CreateUsersRequest
 from schemas.users_sch import CreateUser, UserOut, UpdateUser, UserBaseOut, UpdateUserProfile
 from daos.users_dao import UserDAO
-from utils.enums import AccessLevel, SessionAttributes, RequestStatus
+from utils.enums import AccessLevel, SessionAttributes, RequestStatus, AuthMethods
 from utils.response import ok, error
 
 
@@ -57,11 +57,31 @@ class UserService:
 
         return ok(message="Successfully provided user details.", data=user_data)
 
-    async def create_user(self, user_data: CreateUser):
+    async def create_user(self, request: Request, user_data: CreateUser):
         try:
+            auth_method = request.session.get(SessionAttributes.AUTH_METHOD.value)
+
+            if auth_method != AuthMethods.LOCAL.value:
+                user_data.password = ""
+                user = await self.user_dao.create(user_data)
+                return ok(
+                    message="Successfully created user.",
+                    data=UserOut.model_validate(user.as_dict())
+                )
+
+            if not user_data.password:
+                return error(
+                    message="Password is required.",
+                    status_code=Status.HTTP_400_BAD_REQUEST
+                )
+
             user_data.password = hashlib.sha512(user_data.password.encode('utf-8')).hexdigest()
             user = await self.user_dao.create(user_data)
-            return ok(message="Successfully created user.", data=UserOut.model_validate(user.as_dict()))
+            return ok(
+                message="Successfully created user.",
+                data=UserOut.model_validate(user.as_dict())
+            )
+
         except ValueError as e:
             return error(message=str(e))
 

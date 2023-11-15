@@ -58,8 +58,8 @@ class CreateUser(BaseModel):
     first_name: str
     last_name: str
     email: str
-    password: str
-    confirm_password: str
+    password: Optional[str] = ""
+    confirm_password: Optional[str] = ""
     status: str
     access_level: str = "base_access"
 

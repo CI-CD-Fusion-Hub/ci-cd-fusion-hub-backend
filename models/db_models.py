@@ -140,7 +140,7 @@ class Pipelines(Base):
 class AccessRolePipelines(Base):
     __tablename__ = 'access_role_pipelines'
 
-    pipeline_id = Column(Integer, ForeignKey('pipelines.id'), primary_key=True)
+    pipeline_id = Column(Integer, ForeignKey('pipelines.id', ondelete='CASCADE'), primary_key=True)
     access_role_id = Column(Integer, ForeignKey('access_roles.id', ondelete='CASCADE'), primary_key=True)
     created_ts = Column(TIMESTAMP, default=func.now())
 
