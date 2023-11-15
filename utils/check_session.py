@@ -34,7 +34,11 @@ def auth_required(function_to_protect):
             for pipeline in role_member.role.pipelines:
                 pipelines.add(pipeline.pipeline.id)
 
-        request.session[SessionAttributes.USER_INFO.value] = user.as_dict()
+        request.session[SessionAttributes.USER_INFO.value] = \
+            {
+                **user.as_dict(),
+                SessionAttributes.AUTH_METHOD.value: request.session.get(SessionAttributes.AUTH_METHOD.value)
+            }
         request.session[SessionAttributes.USER_ACCESS_LEVEL.value] = user.access_level
         request.session[SessionAttributes.USER_ID.value] = user.id
         request.session[SessionAttributes.USER_ROLES.value] = list(roles)

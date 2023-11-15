@@ -34,13 +34,10 @@ class RequestStatus(Enum):
 
 class SessionAttributes(Enum):
     OAUTH_STATE = 'oauth_state'
-    AUTH_METHOD = 'AUTH_METHOD'
-    USER_ID = 'USER_ID'
-    USER_NAME = 'USER_NAME'
-    USER_ACCESS_LEVEL = 'USER_ACCESS_LEVEL'
-    USER_ROLES = 'USER_ROLES'
-    USER_PIPELINES = 'USER_PIPELINES'
-    USER_INFO = 'USER_INFO'
-
-
-
+    AUTH_METHOD = 'auth_method'
+    USER_ID = 'user_id'
+    USER_NAME = 'user_name'
+    USER_ACCESS_LEVEL = 'user_access_level'
+    USER_ROLES = 'user_roles'
+    USER_PIPELINES = 'user_pipelines'
+    USER_INFO = 'user_info'
