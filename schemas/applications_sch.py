@@ -9,7 +9,7 @@ from utils.enums import AppType
 
 class CreateApplication(BaseModel):
     name: str
-    auth_user: str
+    auth_user: Optional[str] = ""
     auth_pass: str
     base_url: str
     type: str
