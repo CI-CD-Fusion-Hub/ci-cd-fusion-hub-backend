@@ -54,9 +54,13 @@ class CASProperties(BaseModel):
         }
 
 
+class LocalProperties(BaseModel):
+    pass
+
+
 class CreateAuthMethod(BaseModel):
     type: str
-    properties: CASProperties | ADDSProperties = {}
+    properties: CASProperties | ADDSProperties | LocalProperties = {}
     admin_users: List[str]
 
     @field_validator("type")
