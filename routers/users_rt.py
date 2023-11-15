@@ -26,7 +26,7 @@ async def get_all_users(request: Request, user_service: UserService = Depends(cr
 @admin_access_required
 async def create_user(request: Request, user_data: CreateUser,
                       user_service: UserService = Depends(create_user_service)) -> UserResponse:
-    return await user_service.create_user(user_data)
+    return await user_service.create_user(request, user_data)
 
 
 @router.get("/users/{user_id}", tags=["users"])
