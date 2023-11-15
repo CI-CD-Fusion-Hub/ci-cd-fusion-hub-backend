@@ -236,10 +236,10 @@ class AuthService:
         auth_db = await self.auth_dao.get_all()
         if not auth_db:
             LOGGER.info("No authentication method found.")
-            return ok(message="Successfully provided access role.", data={})
+            return ok(message="Successfully provided auth method.", data=AuthOut(id=0, type=AuthMethods.LOCAL.value))
 
         LOGGER.info("Authentication method found.")
-        return ok(message="Successfully provided access role.", data=AuthOut.model_validate(auth_db.as_dict()))
+        return ok(message="Successfully provided auth method.", data=AuthOut.model_validate(auth_db.as_dict()))
 
     async def get_login_auth_method(self):
         auth_db = await self.auth_dao.get_all()

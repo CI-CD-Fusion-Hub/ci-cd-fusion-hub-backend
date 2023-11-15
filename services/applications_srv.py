@@ -9,12 +9,36 @@ from utils.clients.gitlab import GitlabClient
 from utils.clients.jenkins import JenkinsClient
 from utils.enums import AppType
 from utils.response import ok, error
+from fastapi import status as Status
 
 
 class ApplicationService:
     def __init__(self):
         self.app_dao = ApplicationDAO()
         self.pipelines_dao = PipelineDAO()
+
+    @classmethod
+    async def _get_client(cls, app_data: CreateApplication):
+        client = None
+
+        if app_data.type == AppType.GITLAB.value:
+            client = GitlabClient(base_url=app_data.base_url, token=app_data.auth_pass)
+        if app_data.type == AppType.GITHUB.value:
+            client = GithubClient(base_url=app_data.base_url, token=app_data.auth_pass)
+        elif app_data.type == AppType.JENKINS.value:
+            client = JenkinsClient(base_url=app_data.base_url, user=app_data.auth_user, token=app_data.auth_pass)
+
+        return client
+
+    async def verify_application(self, app_data: CreateApplication):
+        client = await self._get_client(app_data)
+        if client is None:
+            return error(message="Invalid application type provided.", status_code=Status.HTTP_400_BAD_REQUEST)
+
+        if await client.check_connection():
+            return ok(message="Application is accessible!")
+
+        return error(message="Application is NOT accessible.", status_code=Status.HTTP_400_BAD_REQUEST)
 
     async def get_all_applications(self):
         applications = await self.app_dao.get_all()
@@ -30,6 +54,13 @@ class ApplicationService:
                   data=ApplicationOut.model_validate(application.as_dict()))
 
     async def create_application(self, app_data: CreateApplication):
+        client = await self._get_client(app_data)
+        if client is None:
+            return error(message="Invalid application type provided.", status_code=Status.HTTP_400_BAD_REQUEST)
+
+        if not await client.check_connection():
+            return error(message="Application is NOT accessible.", status_code=Status.HTTP_400_BAD_REQUEST)
+
         application = await self.app_dao.create(app_data.model_dump())
         return ok(message="Successfully created application.",
                   data=ApplicationOut.model_validate(application.as_dict()))
@@ -57,22 +88,3 @@ class ApplicationService:
 
         return ok(message="Successfully updated application.",
                   data=ApplicationOut.model_validate(application.as_dict()))
-
-    @staticmethod
-    async def verify_application(app_data: CreateApplication):
-        client = None
-
-        if app_data.type == AppType.GITLAB.value:
-            client = GitlabClient(base_url=app_data.base_url, token=app_data.auth_pass)
-        if app_data.type == AppType.GITHUB.value:
-            client = GithubClient(base_url=app_data.base_url, token=app_data.auth_pass)
-        elif app_data.type == AppType.JENKINS.value:
-            client = JenkinsClient(base_url=app_data.base_url, user=app_data.auth_user, token=app_data.auth_pass)
-
-        if client is None:
-            return error(message="Invalid application type provided.")
-
-        if await client.check_connection():
-            return ok(message="Application is accessible!")
-        else:
-            return error(message="Application is NOT accessible.")
