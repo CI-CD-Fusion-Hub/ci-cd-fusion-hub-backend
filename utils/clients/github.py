@@ -231,13 +231,6 @@ class GithubClient(BaseClient):
     async def get_pipeline_params(self, project_id: str):
         """Get Github pipeline parameters."""
         try:
-            parameters_file_url = f"{self._base_url}/repositories/{project_id}/contents/parameters.json"
-            repo_file_data = await self.get_json(parameters_file_url)
-
-            file_content_base64 = repo_file_data['content']
-            file_content_bytes = base64.b64decode(file_content_base64)
-            file_content = file_content_bytes.decode('utf-8')
-
             repo_variables_url = f"{self._base_url}/repositories/{project_id}/actions/variables"
             repo_branches_url = f"{self._base_url}/repositories/{project_id}/branches"
             repo_variables = await self.get_json(repo_variables_url)
@@ -250,6 +243,15 @@ class GithubClient(BaseClient):
                 variables.append(
                     {'key': variable['name'], 'type': 'string', 'value': variable['value'], 'required': False})
 
+            parameters_file_url = f"{self._base_url}/repositories/{project_id}/contents/parameters.json"
+            parameters_file_resp = await self._client.get(parameters_file_url)
+
+            if parameters_file_resp.status_code != 200:
+                return variables
+
+            file_content_base64 = parameters_file_resp.json()['content']
+            file_content_bytes = base64.b64decode(file_content_base64)
+            file_content = file_content_bytes.decode('utf-8')
             for param in json.loads(file_content)['parameters']:
                 if param['id'] != 'branch':
                     variables.append(
