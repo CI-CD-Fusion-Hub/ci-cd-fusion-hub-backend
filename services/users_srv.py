@@ -213,7 +213,7 @@ class UserService:
 
     async def get_user_unassigned_pipelines(self, request):
         user_pipeline_ids = set(request.session.get(SessionAttributes.USER_PIPELINES.value))
-        all_pipeline_objects = await self.pipelines_dao.get_by_application_type(AppStatus.ACTIVE.value)
+        all_pipeline_objects = await self.pipelines_dao.get_by_application_status(AppStatus.ACTIVE.value)
         unassigned_pipelines = [pipeline for pipeline in all_pipeline_objects if pipeline.id not in user_pipeline_ids]
 
         return ok(message="Successfully provided unassigned pipelines for user.",

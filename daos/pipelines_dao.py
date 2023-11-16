@@ -24,8 +24,8 @@ class PipelineDAO:
         async with self.db:
             result = await self.db.execute(
                 select(model.Pipelines).join(model.Applications)
-                .where(model.Applications.status == str(AppStatus.ACTIVE.value))
                 .where(model.Applications.type == app_type)
+                .where(model.Applications.status == str(AppStatus.ACTIVE.value))
             )
             return result.scalars().all()
 
