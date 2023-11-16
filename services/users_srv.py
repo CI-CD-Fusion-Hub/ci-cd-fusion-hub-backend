@@ -3,7 +3,6 @@ import hashlib
 from fastapi import Request
 from fastapi import status as Status
 
-from config.config import Settings
 from daos.pipelines_dao import PipelineDAO
 from daos.users_requests_dao import UserRequestsDAO
 from exceptions.user_exception import UserNotFoundException
@@ -11,7 +10,7 @@ from schemas.pipelines_sch import PipelineOut
 from schemas.users_requests_sch import UsersRequestOut, User, Pipeline, UpdateUsersRequest, CreateUsersRequest
 from schemas.users_sch import CreateUser, UserOut, UpdateUser, UserBaseOut, UpdateUserProfile
 from daos.users_dao import UserDAO
-from utils.enums import AccessLevel, SessionAttributes, RequestStatus, AuthMethods
+from utils.enums import AccessLevel, SessionAttributes, RequestStatus, AuthMethods, AppStatus
 from utils.response import ok, error
 
 
@@ -214,7 +213,7 @@ class UserService:
 
     async def get_user_unassigned_pipelines(self, request):
         user_pipeline_ids = set(request.session.get(SessionAttributes.USER_PIPELINES.value))
-        all_pipeline_objects = await self.pipelines_dao.get_all()
+        all_pipeline_objects = await self.pipelines_dao.get_by_application_type(AppStatus.ACTIVE.value)
         unassigned_pipelines = [pipeline for pipeline in all_pipeline_objects if pipeline.id not in user_pipeline_ids]
 
         return ok(message="Successfully provided unassigned pipelines for user.",

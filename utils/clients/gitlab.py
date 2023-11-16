@@ -11,8 +11,11 @@ from exceptions.custom_http_expeption import CustomHTTPException
 from exceptions.gitlab_exception import GitLabConnectionException
 from utils.clients.base import BaseClient
 from utils.enums import AppType
+from utils.logger import Logger
 
 INVALID_DATA_ERROR = "Invalid data received from GitLab."
+
+LOGGER = Logger().start_logger()
 
 
 class GitlabClient(BaseClient):
@@ -61,7 +64,8 @@ class GitlabClient(BaseClient):
 
             return pipelines
         except httpx.RequestError:
-            raise GitLabConnectionException(detail=f"Failed to connect to GitLab - {self._base_url}.")
+            LOGGER.warn(f"Failed to connect to GitLab - {self._base_url}.")
+            raise GitLabConnectionException(detail=f"Failed to connect to GitLab.")
         except ValueError:
             raise CustomHTTPException(
                 detail=INVALID_DATA_ERROR,
@@ -122,7 +126,8 @@ class GitlabClient(BaseClient):
 
             return pipeline_result
         except httpx.RequestError:
-            raise GitLabConnectionException(detail=f"Failed to connect to GitLab - {self._base_url}.")
+            LOGGER.warn(f"Failed to connect to GitLab - {self._base_url}.")
+            raise GitLabConnectionException(detail=f"Failed to connect to GitLab.")
         except ValueError:
             raise CustomHTTPException(
                 detail=INVALID_DATA_ERROR,
@@ -183,7 +188,8 @@ class GitlabClient(BaseClient):
 
             return pipeline_json
         except httpx.RequestError:
-            raise GitLabConnectionException(detail=f"Failed to connect to GitLab - {self._base_url}.")
+            LOGGER.warn(f"Failed to connect to GitLab - {self._base_url}.")
+            raise GitLabConnectionException(detail=f"Failed to connect to GitLab.")
         except ValueError:
             raise CustomHTTPException(
                 detail=INVALID_DATA_ERROR,
@@ -200,7 +206,8 @@ class GitlabClient(BaseClient):
 
             return result.json()
         except httpx.RequestError:
-            raise GitLabConnectionException(detail=f"Failed to connect to GitLab - {self._base_url}.")
+            LOGGER.warn(f"Failed to connect to GitLab - {self._base_url}.")
+            raise GitLabConnectionException(detail=f"Failed to connect to GitLab.")
         except ValueError:
             raise CustomHTTPException(
                 detail=INVALID_DATA_ERROR,
@@ -217,7 +224,8 @@ class GitlabClient(BaseClient):
 
             return result
         except httpx.RequestError:
-            raise GitLabConnectionException(detail=f"Failed to connect to GitLab - {self._base_url}.")
+            LOGGER.warn(f"Failed to connect to GitLab - {self._base_url}.")
+            raise GitLabConnectionException(detail=f"Failed to connect to GitLab.")
         except ValueError:
             raise CustomHTTPException(
                 detail=INVALID_DATA_ERROR,
@@ -242,7 +250,8 @@ class GitlabClient(BaseClient):
 
             return result
         except httpx.RequestError:
-            raise GitLabConnectionException(detail=f"Failed to connect to GitLab - {self._base_url}.")
+            LOGGER.warn(f"Failed to connect to GitLab - {self._base_url}.")
+            raise GitLabConnectionException(detail=f"Failed to connect to GitLab.")
         except ValueError:
             raise CustomHTTPException(
                 detail=INVALID_DATA_ERROR,
@@ -257,7 +266,8 @@ class GitlabClient(BaseClient):
             result.raise_for_status()
             return result.json()
         except httpx.RequestError:
-            raise GitLabConnectionException(detail=f"Failed to connect to GitLab - {self._base_url}.")
+            LOGGER.warn(f"Failed to connect to GitLab - {self._base_url}.")
+            raise GitLabConnectionException(detail=f"Failed to connect to GitLab.")
         except ValueError:
             raise CustomHTTPException(
                 detail=INVALID_DATA_ERROR,
@@ -272,7 +282,8 @@ class GitlabClient(BaseClient):
 
             return result
         except httpx.RequestError:
-            raise GitLabConnectionException(detail=f"Failed to connect to GitLab - {self._base_url}.")
+            LOGGER.warn(f"Failed to connect to GitLab - {self._base_url}.")
+            raise GitLabConnectionException(detail=f"Failed to connect to GitLab.")
         except ValueError:
             raise CustomHTTPException(
                 detail=INVALID_DATA_ERROR,
@@ -287,7 +298,8 @@ class GitlabClient(BaseClient):
 
             return result
         except httpx.RequestError:
-            raise GitLabConnectionException(detail=f"Failed to connect to GitLab - {self._base_url}.")
+            LOGGER.warn(f"Failed to connect to GitLab - {self._base_url}.")
+            raise GitLabConnectionException(detail=f"Failed to connect to GitLab.")
         except ValueError:
             raise CustomHTTPException(
                 detail=INVALID_DATA_ERROR,
@@ -326,7 +338,8 @@ class GitlabClient(BaseClient):
 
             return variables
         except httpx.RequestError:
-            raise GitLabConnectionException(detail=f"Failed to connect to GitLab - {self._base_url}.")
+            LOGGER.warn(f"Failed to connect to GitLab - {self._base_url}.")
+            raise GitLabConnectionException(detail=f"Failed to connect to GitLab.")
         except ValueError:
             raise CustomHTTPException(
                 detail=INVALID_DATA_ERROR,

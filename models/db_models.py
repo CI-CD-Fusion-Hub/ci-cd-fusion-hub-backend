@@ -99,7 +99,7 @@ class AccessRoleMembers(Base):
     __tablename__ = "access_role_members"
 
     user_id = Column(Integer, ForeignKey('users.id', ondelete='CASCADE'), primary_key=True)
-    role_id = Column(Integer, ForeignKey('access_roles.id'), primary_key=True)
+    role_id = Column(Integer, ForeignKey('access_roles.id', ondelete='CASCADE'), primary_key=True)
     created_ts = Column(TIMESTAMP, default=func.now())
 
     user = relationship("Users", back_populates="roles")
@@ -118,7 +118,7 @@ class Pipelines(Base):
 
     id = Column(Integer, primary_key=True, autoincrement=True)
     name = Column(String)
-    application_id = Column(Integer, ForeignKey('applications.id'))
+    application_id = Column(Integer, ForeignKey('applications.id', ondelete='CASCADE'   ))
     project_id = Column(String)
     created_ts = Column(TIMESTAMP, default=func.now())
 

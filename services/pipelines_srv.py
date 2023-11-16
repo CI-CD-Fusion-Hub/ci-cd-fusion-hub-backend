@@ -6,7 +6,7 @@ from schemas.applications_sch import ApplicationOut
 from schemas.pipelines_sch import PipelineOut, GitlabStartPipelineParams, JenkinsStartPipelineParams, \
     GithubStartPipelineParams
 from utils.clients.client_manager import ClientManager
-from utils.enums import AppType, SessionAttributes, AccessLevel
+from utils.enums import AppType, SessionAttributes, AccessLevel, AppStatus
 from utils.response import ok
 
 
@@ -42,7 +42,7 @@ class PipelinesService:
         if user_access_level != AccessLevel.ADMIN.value:
             pipelines = await self.pipelines_dao.get_pipelines_by_ids(user_pipelines)
         else:
-            pipelines = await self.pipelines_dao.get_all()
+            pipelines = await self.pipelines_dao.get_by_application_status(AppStatus.ACTIVE.value)
 
         return ok(message="Successfully provided all pipelines.",
                   data=[PipelineOut.model_validate(pipeline.as_dict()) for pipeline in pipelines])

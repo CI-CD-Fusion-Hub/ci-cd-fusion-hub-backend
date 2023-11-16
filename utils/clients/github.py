@@ -67,8 +67,8 @@ class GithubClient(BaseClient):
 
                 workflows = response.json()["workflows"]
                 for workflow in workflows:
-                    updated_pipelines.append({'id': pipeline["id"], 'name': workflow["name"], 'app': self._app_id,
-                                              'type': AppType.GITHUB.value})
+                    updated_pipelines.append({'id': pipeline["id"], 'name': f"[{pipeline['name']}] {workflow['name']}",
+                                              'app': self._app_id, 'type': AppType.GITHUB.value})
 
             return updated_pipelines
         except httpx.RequestError:
@@ -102,7 +102,8 @@ class GithubClient(BaseClient):
             workflows_url = f"{self._base_url}/repositories/{project_id}/actions/workflows"
             workflow_response = await self.get_json(workflows_url)
             workflows = workflow_response.get("workflows", [])
-
+            # Reformat workflow name since it is at pipeline creation
+            workflow_name = workflow_name.split("] ")[1]
             workflow = next(
                 (workflow for workflow in workflows if workflow['name'] == workflow_name),
                 None
@@ -280,6 +281,8 @@ class GithubClient(BaseClient):
             url = f"{self._base_url}/repositories/{project_id}/actions/workflows"
             workflow_response = await self.get_json(url)
             workflows = workflow_response.get("workflows", [])
+            # Reformat workflow name since it is at pipeline creation
+            workflow_name = workflow_name.split("] ")[1]
 
             workflow_info = next(
                 (workflow for workflow in workflows if workflow["name"] == workflow_name),
