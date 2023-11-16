@@ -41,7 +41,7 @@ class GithubClient(BaseClient):
         try:
             response = await self._client.get(url=f"{self._base_url}/user")
             return response.status_code == status.HTTP_200_OK
-        except httpx.RequestError:
+        except httpx.RequestError as e:
             return False
 
     async def check_connection_to_org_repos(self, org_name) -> bool:
@@ -71,15 +71,15 @@ class GithubClient(BaseClient):
                                               'app': self._app_id, 'type': AppType.GITHUB.value})
 
             return updated_pipelines
-        except httpx.RequestError:
+        except httpx.RequestError as e:
             raise CustomGithubException(
-                detail=GitHubErrorMessages.INVALID_DATA,
-                status_code=status.HTTP_400_BAD_REQUEST
+                detail=str(e),
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
-        except Exception:
+        except Exception as e:
             raise CustomHTTPException(
-                detail=GitHubErrorMessages.CONNECTION_ERROR,
-                status_code=status.HTTP_400_BAD_REQUEST
+                detail=str(e),
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
 
     async def get_pipelines_list_by_pattern(self, regex_pattern: str) -> List:
@@ -163,16 +163,16 @@ class GithubClient(BaseClient):
 
             return workflow_runs
 
-        except httpx.RequestError:
+        except httpx.RequestError as e:
             raise CustomGithubException(
-                detail=GitHubErrorMessages.INVALID_DATA,
-                status_code=status.HTTP_400_BAD_REQUEST
+                detail=str(e),
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
 
-        except Exception:
+        except Exception as e:
             raise CustomHTTPException(
-                detail=GitHubErrorMessages.CONNECTION_ERROR,
-                status_code=status.HTTP_400_BAD_REQUEST
+                detail=str(e),
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
 
     async def get_project_pipeline_info(self, project_id: str, run_id: int) -> Dict:
@@ -195,7 +195,7 @@ class GithubClient(BaseClient):
                 started_at = job["started_at"]
                 completed_at = job["completed_at"]
 
-                stage_duration = None
+                stage_duration = 0
                 if started_at and completed_at:
                     started_at_time = datetime.datetime.fromisoformat(started_at.replace("Z", ""))
                     completed_at_time = datetime.datetime.fromisoformat(completed_at.replace("Z", ""))
@@ -217,15 +217,15 @@ class GithubClient(BaseClient):
             data["duration"] = duration
             data["created_at"] = int(datetime.datetime.fromisoformat(run_data['created_at']).timestamp())
             return data
-        except httpx.RequestError:
+        except httpx.RequestError as e:
             raise CustomGithubException(
-                detail=GitHubErrorMessages.INVALID_DATA,
-                status_code=status.HTTP_400_BAD_REQUEST
+                detail=str(e),
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
-        except Exception:
+        except Exception as e:
             raise CustomHTTPException(
-                detail=GitHubErrorMessages.CONNECTION_ERROR,
-                status_code=status.HTTP_400_BAD_REQUEST
+                detail=str(e),
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
 
     async def get_pipeline_params(self, project_id: str):
@@ -266,15 +266,15 @@ class GithubClient(BaseClient):
                     )
 
             return variables
-        except httpx.RequestError:
+        except httpx.RequestError as e:
             raise CustomGithubException(
-                detail=GitHubErrorMessages.INVALID_DATA,
-                status_code=status.HTTP_400_BAD_REQUEST
+                detail=str(e),
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
-        except Exception:
+        except Exception as e:
             raise CustomHTTPException(
-                detail=GitHubErrorMessages.CONNECTION_ERROR,
-                status_code=status.HTTP_400_BAD_REQUEST
+                detail=str(e),
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
 
     async def start_new_pipeline(self, workflow_name: str, project_id: int, params: dict):
@@ -299,15 +299,15 @@ class GithubClient(BaseClient):
             response.raise_for_status()
 
             return response.text
-        except httpx.RequestError:
+        except httpx.RequestError as e:
             raise CustomGithubException(
-                detail=GitHubErrorMessages.INVALID_DATA,
-                status_code=status.HTTP_400_BAD_REQUEST
+                detail=str(e),
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
-        except Exception:
+        except Exception as e:
             raise CustomHTTPException(
-                detail=GitHubErrorMessages.CONNECTION_ERROR,
-                status_code=status.HTTP_400_BAD_REQUEST
+                detail=str(e),
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
 
     async def retry_pipeline(self, project_id: str, run_id: int):
@@ -317,15 +317,15 @@ class GithubClient(BaseClient):
 
             response = await self._client.post(url)
             response.raise_for_status()
-        except httpx.RequestError:
+        except httpx.RequestError as e:
             raise CustomGithubException(
-                detail=GitHubErrorMessages.INVALID_DATA,
-                status_code=status.HTTP_400_BAD_REQUEST
+                detail=str(e),
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
-        except Exception:
+        except Exception as e:
             raise CustomHTTPException(
-                detail=GitHubErrorMessages.CONNECTION_ERROR,
-                status_code=status.HTTP_400_BAD_REQUEST
+                detail=str(e),
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
 
     async def cancel_pipeline(self, project_id: str, run_id: int):
@@ -335,15 +335,15 @@ class GithubClient(BaseClient):
 
             response = await self._client.post(url)
             response.raise_for_status()
-        except httpx.RequestError:
+        except httpx.RequestError as e:
             raise CustomGithubException(
-                detail=GitHubErrorMessages.INVALID_DATA,
-                status_code=status.HTTP_400_BAD_REQUEST
+                detail=str(e),
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
-        except Exception:
+        except Exception as e:
             raise CustomHTTPException(
-                detail=GitHubErrorMessages.CONNECTION_ERROR,
-                status_code=status.HTTP_400_BAD_REQUEST
+                detail=str(e),
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
 
     async def get_project_pipeline_jobs(self, project_id: str, run_id: int):
@@ -352,15 +352,15 @@ class GithubClient(BaseClient):
             url = f"{self._base_url}/repositories/{project_id}/actions/runs/{run_id}/jobs"
             result = self.get_json(url)
             return result
-        except httpx.RequestError:
+        except httpx.RequestError as e:
             raise CustomGithubException(
-                detail=GitHubErrorMessages.INVALID_DATA,
-                status_code=status.HTTP_400_BAD_REQUEST
+                detail=str(e),
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
-        except Exception:
+        except Exception as e:
             raise CustomHTTPException(
-                detail=GitHubErrorMessages.CONNECTION_ERROR,
-                status_code=status.HTTP_400_BAD_REQUEST
+                detail=str(e),
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
 
     async def get_project_pipeline_job_logs(self, project_id: str, job_id: str):
@@ -376,15 +376,15 @@ class GithubClient(BaseClient):
             job_info['log'] = self.escape_ansi(logs_response.text).splitlines()
 
             return job_info
-        except httpx.RequestError:
+        except httpx.RequestError as e:
             raise CustomGithubException(
-                detail=GitHubErrorMessages.INVALID_DATA,
-                status_code=status.HTTP_400_BAD_REQUEST
+                detail=str(e),
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
-        except Exception:
+        except Exception as e:
             raise CustomHTTPException(
-                detail=GitHubErrorMessages.CONNECTION_ERROR,
-                status_code=status.HTTP_400_BAD_REQUEST
+                detail=str(e),
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
 
     async def get_json(self, url: str):
