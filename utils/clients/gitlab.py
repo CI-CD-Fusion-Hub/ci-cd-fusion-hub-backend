@@ -121,7 +121,14 @@ class GitlabClient(BaseClient):
                         "duration": int(job["duration"])
                     })
 
-                pipeline_result[index]['stages'] = pipeline_result[index]['stages'][::-1]
+                stages = pipeline_result[index]['stages']
+                if stages:
+                    # Sort stages by 'started_at', treating None as a minimum value
+                    pipeline_result[index]['stages'] = sorted(
+                        stages,
+                        key=lambda x: (x.get('started_at') or '9999-12-31T23:59:59Z')  # Using a default value for None
+                    )
+
                 pipeline_result[index]["duration"] = int(pipeline_result[index]["duration"])
 
             return pipeline_result
