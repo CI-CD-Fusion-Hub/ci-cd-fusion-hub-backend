@@ -18,6 +18,11 @@ class UserStatus(Enum):
     INACTIVE = 'inactive'
 
 
+class AppStatus(Enum):
+    ACTIVE = 'active'
+    INACTIVE = 'inactive'
+
+
 class AuthMethods(Enum):
     CAS = 'CAS'
     AAD = 'Azure AD'

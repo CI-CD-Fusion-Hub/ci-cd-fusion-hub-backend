@@ -7,6 +7,7 @@ from exceptions.database_exception import DatabaseIntegrityException
 from models import db_models as model
 
 from utils import database
+from utils.enums import AppStatus
 
 
 class PipelineDAO:
@@ -20,10 +21,19 @@ class PipelineDAO:
             return result.scalars().all()
 
     async def get_by_application_type(self, app_type: str) -> List[model.Pipelines]:
-        """Fetch all pipelines for a specific application type."""
         async with self.db:
             result = await self.db.execute(
-                select(model.Pipelines).join(model.Applications).where(model.Applications.type == app_type)
+                select(model.Pipelines).join(model.Applications)
+                .where(model.Applications.status == str(AppStatus.ACTIVE.value))
+                .where(model.Applications.type == app_type)
+            )
+            return result.scalars().all()
+
+    async def get_by_application_status(self, status: str) -> List[model.Pipelines]:
+        """Fetch all pipelines for a specific application status."""
+        async with self.db:
+            result = await self.db.execute(
+                select(model.Pipelines).join(model.Applications).where(model.Applications.status == status)
             )
             return result.scalars().all()
 
@@ -42,19 +52,27 @@ class PipelineDAO:
                 select(model.Pipelines).join(model.Applications)
                 .where(model.Applications.type == app_type)
                 .where(model.Pipelines.id.in_(pipeline_ids))
+                .where(model.Applications.status == str(AppStatus.ACTIVE.value))
             )
             return result.scalars().all()
 
     async def get_pipelines_by_ids(self, pipeline_ids: List[int]) -> List[model.Pipelines]:
         """Fetch all pipelines by ids."""
         async with self.db:
-            result = await self.db.execute(select(model.Pipelines).where(model.Pipelines.id.in_(pipeline_ids)))
+            result = await self.db.execute(
+                select(model.Pipelines)
+                .join(model.Applications)
+                .where(model.Applications.status == str(AppStatus.ACTIVE.value))
+                .where(model.Pipelines.id.in_(pipeline_ids))
+            )
             return result.scalars().all()
 
     async def get_by_id(self, pipeline_id: int) -> model.Pipelines:
         """Fetch a specific pipeline by its ID."""
         async with self.db:
-            result = await self.db.execute(select(model.Pipelines).where(model.Pipelines.id == pipeline_id))
+            result = await self.db.execute(select(model.Pipelines)
+                                           .where(model.Applications.status == str(AppStatus.ACTIVE.value))
+                                           .where(model.Pipelines.id == pipeline_id))
             return result.scalars().first()
 
     async def create(self, pipeline_data) -> model.Pipelines:

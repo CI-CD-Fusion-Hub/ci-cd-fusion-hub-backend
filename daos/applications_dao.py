@@ -19,6 +19,12 @@ class ApplicationDAO:
             result = await self.db.execute(select(model.Applications))
             return result.scalars().all()
 
+    async def get_all_by_status(self, status: str) -> List[model.Applications]:
+        """Fetch all applications by status."""
+        async with self.db:
+            result = await self.db.execute(select(model.Applications).where(model.Applications.status == status))
+            return result.scalars().all()
+
     async def get_by_id(self, application_id: int) -> model.Applications:
         """Fetch a specific application by its ID."""
         async with self.db:
