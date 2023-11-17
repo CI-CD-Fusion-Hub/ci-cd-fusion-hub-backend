@@ -33,6 +33,7 @@ class AuthService:
 
     @classmethod
     async def logout(cls, request):
+        LOGGER.info(f"User {request.session.get(SessionAttributes.USER_NAME.value)} successfully logged out.")
         request.session.clear()
         return ok(message="Successful logout.")
 

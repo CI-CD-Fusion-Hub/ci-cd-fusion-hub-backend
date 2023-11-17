@@ -149,13 +149,17 @@ class JenkinsClient(BaseClient):
             if var['_class'] == 'hudson.model.ParametersDefinitionProperty':
                 for variable in var['parameterDefinitions']:
                     if variable['type'] == 'ChoiceParameterDefinition':
-                        variables.append({'key': variable['name'], 'type': str(variable['type']).lower(),
+                        variables.append({'key': variable['name'],
+                                          'type': str(variable['type']).lower().split("parameter")[0],
                                           'value': variable['choices'], 'protected': False})
                     elif variable['type'] == 'PasswordParameterDefinition':
-                        variables.append({'key': variable['name'], 'type': str(variable['type']).lower(), 'value': '',
+                        variables.append({'key': variable['name'],
+                                          'type': str(variable['type']).lower().split("parameter")[0],
+                                          'value': '',
                                           'protected': True})
                     else:
-                        variables.append({'key': variable['name'], 'type': str(variable['type']).lower(),
+                        variables.append({'key': variable['name'],
+                                          'type': str(variable['type']).lower().split("parameter")[0],
                                           'value': variable['defaultParameterValue']['value'], 'protected': False})
 
         return variables
