@@ -7,6 +7,7 @@ import httpx
 from fastapi import status
 
 from daos.applications_dao import ApplicationDAO
+from exceptions.custom_http_expeption import CustomHTTPException
 from utils.clients.base import BaseClient
 
 
@@ -120,7 +121,10 @@ class JenkinsClient(BaseClient):
         console_log = console_log_response.text.splitlines()
 
         if not build_response or not console_log_response:
-            raise ValueError("Failed to fetch data from Jenkins")
+            raise CustomHTTPException(
+                detail="Failed to fetch data from Jenkins.",
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
 
         build_info = {
             "name": build['fullDisplayName'],
@@ -136,31 +140,48 @@ class JenkinsClient(BaseClient):
         pipeline_variables = await self.get_pipeline_params(pipeline_name)
         build_url = "buildWithParameters" if len(pipeline_variables) > 0 else "build"
 
-        response = (await self._client.post(f"{self._base_url}/job/{pipeline_name}/{build_url}", json=parameters))
+        response = (await self._client.post(f"{self._base_url}/job/{pipeline_name}/{build_url}", data=parameters))
         if not response.is_success:
-            raise ValueError("Failed to start Jenkins job.")
+            raise CustomHTTPException(
+                detail="Failed to start Jenkins job.",
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
 
     async def get_pipeline_params(self, pipeline_name: str):
-        result = (
-            await self._client.get(f"{self._base_url}/job/{pipeline_name}/api/json?tree=property[*[*[*]]]")).json()
+        result = (await self._client.get(f"{self._base_url}/job/{pipeline_name}/api/json?tree=property[*[*[*]]]"))\
+
+        if result.status_code != status.HTTP_200_OK:
+            raise CustomHTTPException(
+                detail="Unable to get properties for job.",
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
 
         variables = []
-        for var in result['property']:
-            if var['_class'] == 'hudson.model.ParametersDefinitionProperty':
-                for variable in var['parameterDefinitions']:
-                    if variable['type'] == 'ChoiceParameterDefinition':
-                        variables.append({'key': variable['name'],
-                                          'type': str(variable['type']).lower().split("parameter")[0],
-                                          'value': variable['choices'], 'protected': False})
-                    elif variable['type'] == 'PasswordParameterDefinition':
-                        variables.append({'key': variable['name'],
-                                          'type': str(variable['type']).lower().split("parameter")[0],
-                                          'value': '',
-                                          'protected': True})
-                    else:
-                        variables.append({'key': variable['name'],
-                                          'type': str(variable['type']).lower().split("parameter")[0],
-                                          'value': variable['defaultParameterValue']['value'], 'protected': False})
+        properties = result.json().get('property', '')
+        if not properties:
+            return variables
+
+        for var in properties:
+            if var['_class'] != 'hudson.model.ParametersDefinitionProperty':
+                continue
+
+            for variable in var['parameterDefinitions']:
+                if variable['type'] == 'ChoiceParameterDefinition':
+                    variables.append({'key': variable['name'],
+                                      'type': str(variable['type']).lower().split("parameter")[0],
+                                      'description': variable["description"],
+                                      'value': variable['choices'], 'protected': False})
+                elif variable['type'] == 'PasswordParameterDefinition':
+                    variables.append({'key': variable['name'],
+                                      'type': str(variable['type']).lower().split("parameter")[0],
+                                      'value': '',
+                                      'description': variable["description"],
+                                      'protected': True})
+                else:
+                    variables.append({'key': variable['name'],
+                                      'type': str(variable['type']).lower().split("parameter")[0],
+                                      'description': variable["description"],
+                                      'value': variable['defaultParameterValue']['value'], 'protected': False})
 
         return variables
 
@@ -170,7 +191,7 @@ class JenkinsClient(BaseClient):
 
         :param pipeline_name: Name of the Jenkins pipeline.
         :param job_id: ID of the job to be canceled.
-        :raises ValueError: If the request to stop the Jenkins job fails.
+        :raises CustomHTTPException: If the request to stop the Jenkins job fails.
         """
         endpoint = f"{self._base_url}/job/{pipeline_name}/{job_id}/stop"
         response = await self._client.post(endpoint)
@@ -178,6 +199,12 @@ class JenkinsClient(BaseClient):
         if response.status_code in [200, 302]:
             return
         elif response.status_code == 404:  # Not Found
-            raise ValueError(f"Jenkins job with ID {job_id} in pipeline {pipeline_name} not found.")
+            raise CustomHTTPException(
+                detail=f"Jenkins job with ID {job_id} in pipeline {pipeline_name} not found.",
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
         else:
-            raise ValueError(f"Failed to stop Jenkins job with ID {job_id} in pipeline {pipeline_name}.")
+            raise CustomHTTPException(
+                detail=f"Failed to stop Jenkins job with ID {job_id} in pipeline {pipeline_name}.",
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
