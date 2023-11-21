@@ -63,7 +63,7 @@ class UsersRequestBaseOut(BaseModel):
 
 class UsersRequestOut(UsersRequestBaseOut):
     user: Optional[User]
-    pipelines: List
+    pipelines: List | None
 
 
 # Response models

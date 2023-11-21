@@ -20,7 +20,7 @@ class UsersRequestsService:
             users_request_data = UsersRequestOut.model_validate(user_request.as_dict())
             users_request_data.user = User(email=user_request.user.email, id=user_request.user.id)
             users_request_data.pipelines = [(Pipeline(name=pipeline.pipeline.name, id=pipeline.pipeline.id))
-                                            for pipeline in user_request.pipelines]
+                                            for pipeline in user_request.pipelines if pipeline.pipeline]
             users_requests_data.append(users_request_data)
 
         return ok(
@@ -39,7 +39,7 @@ class UsersRequestsService:
 
         users_request_data = UsersRequestOut.model_validate(user_request.as_dict())
         users_request_data.pipelines = [(Pipeline(name=pipeline.pipeline.name, id=pipeline.pipeline.id))
-                                        for pipeline in user_request.pipelines]
+                                        for pipeline in user_request.pipelines if pipeline.pipeline]
         return ok(
             message="Successfully provided users request details.",
             data=users_request_data
