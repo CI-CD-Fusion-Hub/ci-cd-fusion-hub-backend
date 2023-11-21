@@ -26,10 +26,13 @@ class ApplicationService:
         client = None
 
         if app_data.type == AppType.GITLAB.value:
+            LOGGER.info("Initializing GitLab client.")
             client = GitlabClient(base_url=app_data.base_url, token=app_data.auth_pass)
         if app_data.type == AppType.GITHUB.value:
+            LOGGER.info("Initializing GitHub client.")
             client = GithubClient(base_url=app_data.base_url, token=app_data.auth_pass)
         elif app_data.type == AppType.JENKINS.value:
+            LOGGER.info("Initializing Jenkins client.")
             client = JenkinsClient(base_url=app_data.base_url, user=app_data.auth_user, token=app_data.auth_pass)
 
         return client
@@ -37,48 +40,64 @@ class ApplicationService:
     async def verify_application(self, app_data: CreateApplication):
         client = await self._get_client(app_data)
         if client is None:
+            LOGGER.warning("No client initialized for the provided app type.")
             return error(message="Invalid application type provided.", status_code=Status.HTTP_400_BAD_REQUEST)
 
-        if await client.check_connection():
-            return ok(message="Application is accessible!")
+        if not await client.check_connection():
+            LOGGER.warning(f"Application verification failed for {app_data.type}.")
+            return error(message="Application is NOT accessible.", status_code=Status.HTTP_400_BAD_REQUEST)
 
-        return error(message="Application is NOT accessible.", status_code=Status.HTTP_400_BAD_REQUEST)
+        LOGGER.info(f"Application verification successful for {app_data.type}.")
+        return ok(message="Application is accessible!")
 
     async def get_all_applications(self):
         applications = await self.app_dao.get_all()
+        if not applications:
+            LOGGER.info("No applications found in the database.")
+
+        LOGGER.info(f"Retrieved {len(applications)} applications.")
         return ok(message="Successfully provided all applications.",
                   data=[ApplicationOut.model_validate(application.as_dict()) for application in applications])
 
     async def get_application_by_id(self, application_id: int):
         application = await self.app_dao.get_by_id(application_id)
         if not application:
+            LOGGER.warning(f"Application with ID {application_id} not found.")
             raise ApplicationNotFoundException(f"Application with ID {application_id} does not exist.")
 
+        LOGGER.info(f"Successfully retrieved application with ID {application_id}.")
         return ok(message="Successfully provided application.",
                   data=ApplicationOut.model_validate(application.as_dict()))
 
     async def create_application(self, app_data: CreateApplication):
         client = await self._get_client(app_data)
         if client is None:
+            LOGGER.warning("No client initialized for the provided app type.")
             return error(message="Invalid application type provided.", status_code=Status.HTTP_400_BAD_REQUEST)
 
         if not await client.check_connection():
+            LOGGER.warning("Application connection check failed.")
             return error(message="Application is NOT accessible.", status_code=Status.HTTP_400_BAD_REQUEST)
 
         application = await self.app_dao.create(app_data.model_dump())
+        LOGGER.info(f"Successfully created application with type {app_data.type}.")
         return ok(message="Successfully created application.",
                   data=ApplicationOut.model_validate(application.as_dict()))
 
     async def delete_application(self, application_id: int):
         if not await self.app_dao.get_by_id(application_id):
+            LOGGER.warning(f"Attempted to delete a non-existent application with ID {application_id}.")
             raise ApplicationNotFoundException(f"Application with ID {application_id} does not exist.")
+
         await self.app_dao.delete(application_id)
+        LOGGER.info(f"Application with ID {application_id} has been successfully deleted.")
 
         return ok(message="Application has been successfully deleted.")
 
     async def update_application(self, application_id: int, app_data: UpdateApplication):
         application = await self.app_dao.get_by_id(application_id)
         if not application:
+            LOGGER.warning(f"Application with ID {application_id} not found.")
             raise ApplicationNotFoundException(f"Application with ID {application_id} does not exist.")
 
         data_to_update = {k: v for k, v in app_data.model_dump().items() if v is not None}
