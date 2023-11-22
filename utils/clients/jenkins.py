@@ -1,5 +1,6 @@
 import asyncio
 import base64
+import json
 import re
 from typing import List
 
@@ -9,6 +10,9 @@ from fastapi import status
 from daos.applications_dao import ApplicationDAO
 from exceptions.custom_http_expeption import CustomHTTPException
 from utils.clients.base import BaseClient
+from utils.logger import Logger
+
+LOGGER = Logger().start_logger()
 
 
 class JenkinsClient(BaseClient):
@@ -30,7 +34,8 @@ class JenkinsClient(BaseClient):
         """Generate the Authorization header using the provided user and token."""
         credentials = base64.b64encode(f"{self._user}:{self._token}".encode()).decode()
         return {
-            "Authorization": f"Basic {credentials}"
+            "Authorization": f"Basic {credentials}",
+            "Jenkins-Crumb": "83419d19c804191a2deb4100c5e537e74adffeda203fe94ed8275b8cf6d3a854"
         }
 
     async def check_connection(self):
@@ -142,6 +147,7 @@ class JenkinsClient(BaseClient):
 
         response = (await self._client.post(f"{self._base_url}/job/{pipeline_name}/{build_url}", data=parameters))
         if not response.is_success:
+            LOGGER.error(f"Failed to start Jenkins job. Error: {response.text}")
             raise CustomHTTPException(
                 detail="Failed to start Jenkins job.",
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR
@@ -208,3 +214,49 @@ class JenkinsClient(BaseClient):
                 detail=f"Failed to stop Jenkins job with ID {job_id} in pipeline {pipeline_name}.",
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
+
+    async def retry_pipeline(self, pipeline_name: int, job_id: int):
+        """
+        Retry a specific Jenkins pipeline job.
+
+        :param pipeline_name: Name of the Jenkins pipeline.
+        :param job_id: ID of the job to be canceled.
+        :return:
+        """
+        endpoint = f"{self._base_url}/job/{pipeline_name}/{job_id}/replay"
+        job_groovy = (await self._client.get(endpoint, follow_redirects=True)).text
+        groovy_text = re.search('checkScript">([\S\s]*?)</textarea>', job_groovy)
+
+        if not groovy_text:
+            raise CustomHTTPException(
+                detail=f"Jenkins job with ID {job_id} in pipeline {pipeline_name} not found.",
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
+        groovy_text = groovy_text.group(1)
+
+        payload = {
+            "mainScript": groovy_text,
+            "json": json.dumps({
+                "mainScript": groovy_text
+            }),
+            "Submit": 'Run'
+        }
+
+        rerun_endpoint = f"{endpoint}/run"
+        rerun = await self._client.post(rerun_endpoint, data=payload, follow_redirects=True)
+
+        if rerun.status_code == 200:
+            return
+        elif rerun.status_code == 404:
+            raise CustomHTTPException(
+                detail=f"Jenkins job with ID {job_id} in pipeline {pipeline_name} not found.",
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+        else:
+            raise CustomHTTPException(
+                detail=f"Failed to stop Jenkins job with ID {job_id} in pipeline {pipeline_name}.",
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
+
