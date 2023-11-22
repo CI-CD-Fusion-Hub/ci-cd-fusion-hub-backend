@@ -30,12 +30,22 @@ class JenkinsClient(BaseClient):
         app = await ApplicationDAO().get_by_id(application_id)
         return cls(base_url=app.base_url, user=app.auth_user, token=app.auth_pass, application_id=application_id)
 
+    async def _get_jenkins_crumb(self) -> str:
+        """Get the Jenkins crumb."""
+        crumb_url = f"{self._base_url}/crumbIssuer/api/json"
+        response = await self._client.get(crumb_url, auth=(self._user, self._token))
+        if response.status_code != 200:
+            LOGGER.warning("Failed to get jenkins crumb.")
+            return ""
+
+        LOGGER.info("Successfully got jenkins crumb.")
+        return response.json().get('crumb')
+
     def _generate_credentials(self) -> dict:
         """Generate the Authorization header using the provided user and token."""
         credentials = base64.b64encode(f"{self._user}:{self._token}".encode()).decode()
         return {
-            "Authorization": f"Basic {credentials}",
-            "Jenkins-Crumb": "83419d19c804191a2deb4100c5e537e74adffeda203fe94ed8275b8cf6d3a854"
+            "Authorization": f"Basic {credentials}"
         }
 
     async def check_connection(self):
@@ -144,8 +154,10 @@ class JenkinsClient(BaseClient):
     async def start_pipeline(self, pipeline_name: str, parameters: dict):
         pipeline_variables = await self.get_pipeline_params(pipeline_name)
         build_url = "buildWithParameters" if len(pipeline_variables) > 0 else "build"
+        headers = {"Jenkins-Crumb": await self._get_jenkins_crumb()}
 
-        response = (await self._client.post(f"{self._base_url}/job/{pipeline_name}/{build_url}", data=parameters))
+        response = (await self._client.post(f"{self._base_url}/job/{pipeline_name}/{build_url}",
+                                            headers=headers, data=parameters))
         if not response.is_success:
             LOGGER.error(f"Failed to start Jenkins job. Error: {response.text}")
             raise CustomHTTPException(
@@ -244,7 +256,9 @@ class JenkinsClient(BaseClient):
         }
 
         rerun_endpoint = f"{endpoint}/run"
-        rerun = await self._client.post(rerun_endpoint, data=payload, follow_redirects=True)
+        headers = {"Jenkins-Crumb": await self._get_jenkins_crumb()}
+
+        rerun = await self._client.post(rerun_endpoint, headers=headers, data=payload, follow_redirects=True)
 
         if rerun.status_code == 200:
             return

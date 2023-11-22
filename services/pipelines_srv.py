@@ -296,7 +296,7 @@ class PipelinesService:
         pipeline, client = await self._get_pipeline_and_client(pipeline_id)
         await client.start_pipeline(pipeline.name, params.model_dump())
 
-        LOGGER.info(f"Retrieved Jenkins pipeline build for pipeline ID {pipeline_id}, build ID {build_id}.")
+        LOGGER.info(f"Retrieved Jenkins pipeline build for pipeline ID {pipeline_id}.")
         return ok(message="Successfully started jenkins pipeline build.")
 
     async def cancel_jenkins_pipeline_build(self, request: Request, pipeline_id: int, build_id: int):
