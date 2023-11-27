@@ -2,11 +2,10 @@ import uvicorn
 from fastapi import FastAPI
 from uvicorn.config import LOGGING_CONFIG
 
-from config import middlewares_config as middlewares, \
-    exception_handlers_config as exception_handlers, \
-    routers_config as routers, events_config as events
+from app.config import exception_handlers_config as exception_handlers, routers_config as routers, \
+    events_config as events, middlewares_config as middlewares
 
-from config.config import Settings
+from app.config.config import Settings
 
 
 config = Settings().app
